@@ -3,7 +3,8 @@ import path from 'node:path';
 import db from '../db.js';
 import { PUBLIC_DIR } from '../config.js';
 import { writeSitemap } from '../sitemap.js';
-import { esc, headerHtml, footerHtml, PRODUCT_PAGE_CSS } from './partials.js';
+import { esc, stripScripts } from '../html.js';
+import { headerHtml, footerHtml, PRODUCT_PAGE_CSS } from './partials.js';
 
 function getProductBundle(idOrSlug) {
   const product =
@@ -32,7 +33,7 @@ function getProductBundle(idOrSlug) {
   return { product, specs, media, category };
 }
 
-export function renderProductHtml(bundle) {
+function renderProductHtml(bundle) {
   const { product, specs, media } = bundle;
   const title = product.meta_title || `${product.title} | Корса`;
   const desc = product.meta_description || product.description || '';
@@ -67,9 +68,7 @@ export function renderProductHtml(bundle) {
     )
     .join('\n          ');
 
-  const details = String(product.details_html || '')
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+  const details = stripScripts(product.details_html);
   const cover = product.cover_image || (media[0]?.path ?? '');
   const isRemote = /^https?:\/\//i.test(cover);
   const imgAttrs = isRemote ? ' loading="lazy" referrerpolicy="no-referrer"' : ' loading="lazy"';

@@ -5,15 +5,9 @@ import db from '../db.js';
 import { requireAuth } from '../auth.js';
 import { PUBLIC_DIR } from '../config.js';
 import { writeSitemap } from '../sitemap.js';
+import { esc, stripScripts } from '../html.js';
 
 const router = Router();
-
-function esc(str = '') {
-  return String(str)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
-}
 
 function loadItems(pageId) {
   return db
@@ -27,6 +21,19 @@ function loadItems(pageId) {
       photos: postPhotos(row),
       videos: postVideos(row),
     }));
+}
+
+function loadPage(id) {
+  const page = db
+    .prepare(
+      `SELECT id, slug, title, kind, eyebrow, lead, parent_link, parent_label, meta_title, meta_description, published
+       FROM pages WHERE id = ?`
+    )
+    .get(id);
+  if (!page) return null;
+  page.items = loadItems(page.id);
+  page.gallery = page.items.filter((item) => item.kind === 'gallery').length;
+  return page;
 }
 
 function youtubeId(href) {
@@ -150,9 +157,7 @@ function textToParagraphs(text) {
 function articleHtml(body) {
   const raw = String(body || '').trim();
   if (!raw) return '';
-  const safe = raw
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+  const safe = stripScripts(raw);
   if (!/<[a-z][\s\S]*>/i.test(safe)) return textToParagraphs(safe);
   return safe;
 }
@@ -338,10 +343,8 @@ router.get('/', (_req, res) => {
 });
 
 router.get('/:id', (req, res) => {
-  const page = db.prepare('SELECT id, slug, title, kind, eyebrow, lead, parent_link, parent_label, meta_title, meta_description, published FROM pages WHERE id = ?').get(Number(req.params.id));
+  const page = loadPage(Number(req.params.id));
   if (!page) return res.status(404).json({ error: 'Not found' });
-  page.items = loadItems(page.id);
-  page.gallery = db.prepare(`SELECT COUNT(*) AS c FROM page_items WHERE page_id = ? AND kind = 'gallery'`).get(page.id).c;
   res.json(page);
 });
 
@@ -363,9 +366,8 @@ router.put('/:id', requireAuth, (req, res) => {
   const save = db.transaction(() => {
     let html = patchHtml(existing.html || '', existing, next);
     if (Array.isArray(b.items)) {
+      const prevById = new Map(loadItems(id).map((item) => [item.id, item]));
       if (existing.slug === 'statti') {
-        const prevItems = loadItems(id);
-        const prevById = new Map(prevItems.map((item) => [item.id, item]));
         b.items = assignPostSlugs(withPostDates(b.items, prevById), prevById).sort((a, b) =>
           String(b.created_at || '').localeCompare(String(a.created_at || ''))
         );
@@ -375,8 +377,6 @@ router.put('/:id', requireAuth, (req, res) => {
         html = renderStattiPosts(html, b.items);
         writeArticlePages(html, b.items);
       } else {
-        const prevItems = loadItems(id);
-        const prevById = new Map(prevItems.map((item) => [item.id, item]));
         for (const item of b.items) {
           const prev = prevById.get(Number(item.id));
           if (!prev) continue;
@@ -440,10 +440,7 @@ router.put('/:id', requireAuth, (req, res) => {
 
   try {
     save();
-    const page = db.prepare('SELECT id, slug, title, kind, eyebrow, lead, parent_link, parent_label, meta_title, meta_description, published FROM pages WHERE id = ?').get(id);
-    page.items = loadItems(id);
-    page.gallery = db.prepare(`SELECT COUNT(*) AS c FROM page_items WHERE page_id = ? AND kind = 'gallery'`).get(id).c;
-    res.json(page);
+    res.json(loadPage(id));
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -457,23 +454,5 @@ router.post('/:id/publish', requireAuth, (req, res) => {
   writeSitemap();
   res.json({ ok: true, slug: page.slug });
 });
-
-export function republishStoredArticles() {
-  const page = db.prepare(`SELECT * FROM pages WHERE slug = 'statti'`).get();
-  if (!page?.html) return { pages: 0 };
-  const items = loadItems(page.id);
-  const prevById = new Map(items.map((item) => [item.id, item]));
-  const next = assignPostSlugs(items, prevById);
-  const html = renderStattiPosts(page.html || '', next);
-  writeArticlePages(html, next);
-  fs.writeFileSync(path.join(PUBLIC_DIR, 'statti.html'), html, 'utf8');
-  writeSitemap();
-  const upd = db.prepare(`UPDATE page_items SET slug = ? WHERE id = ?`);
-  db.prepare(`UPDATE pages SET html = ? WHERE id = ?`).run(html, page.id);
-  for (const item of next) {
-    if (item.kind === 'post' && item.id) upd.run(item.slug || '', item.id);
-  }
-  return { pages: next.filter((item) => item.kind === 'post' && Number(item.published ?? 1)).length };
-}
 
 export default router;

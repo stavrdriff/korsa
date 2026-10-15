@@ -1,4 +1,3 @@
-import fs from 'node:fs';
 import path from 'node:path';
 import express from 'express';
 import session from 'express-session';
@@ -22,7 +21,6 @@ import pageRoutes from './routes/pages.js';
 import { writeSitemap } from './sitemap.js';
 
 ensureAdminUser();
-fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 const app = express();
 
@@ -53,11 +51,6 @@ app.use('/uploads', express.static(UPLOADS_DIR));
 app.use('/admin', express.static(path.join(ROOT, 'admin')));
 app.get('/admin', (_req, res) => {
   res.sendFile(path.join(ROOT, 'admin', 'index.html'));
-});
-
-// Архів старих HTML не віддається і на нього немає посилань
-app.use('/old', (_req, res) => {
-  res.status(404).type('text/plain').send('Not found');
 });
 
 app.use('/assets', express.static(path.join(ROOT, 'assets')));

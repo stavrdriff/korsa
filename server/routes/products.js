@@ -2,14 +2,9 @@ import { Router } from 'express';
 import slugify from 'slugify';
 import db from '../db.js';
 import { requireAuth } from '../auth.js';
+import { stripScripts } from '../html.js';
 
 const router = Router();
-
-function cleanHtml(html = '') {
-  return String(html)
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
-}
 
 function replaceSpecs(id, specs) {
   if (!Array.isArray(specs)) return;
@@ -130,7 +125,7 @@ router.post('/', requireAuth, (req, res) => {
         b.parent_label || '',
         b.meta_title || '',
         b.meta_description || '',
-        cleanHtml(b.details_html || ''),
+        stripScripts(b.details_html || ''),
         b.published === 0 ? 0 : 1,
         b.sort_order || 0
       );
@@ -176,7 +171,7 @@ router.put('/:id', requireAuth, (req, res) => {
       b.parent_label ?? existing.parent_label,
       b.meta_title ?? existing.meta_title,
       b.meta_description ?? existing.meta_description,
-      b.details_html !== undefined ? cleanHtml(b.details_html) : existing.details_html,
+      b.details_html !== undefined ? stripScripts(b.details_html) : existing.details_html,
       b.published !== undefined ? (b.published ? 1 : 0) : existing.published,
       b.sort_order ?? existing.sort_order,
       id

@@ -75,28 +75,21 @@ db.exec(`
   );
 `);
 
-const categoryCols = db.prepare('PRAGMA table_info(categories)').all();
-if (!categoryCols.some((c) => c.name === 'manual')) {
-  db.exec(`ALTER TABLE categories ADD COLUMN manual INTEGER DEFAULT 0`);
+/** Додає колонку, якщо її ще немає (міграція старих баз) */
+function addColumn(table, name, definition) {
+  const exists = db.prepare(`PRAGMA table_info(${table})`).all().some((c) => c.name === name);
+  if (!exists) db.exec(`ALTER TABLE ${table} ADD COLUMN ${name} ${definition}`);
 }
 
-const productCols = db.prepare('PRAGMA table_info(products)').all();
-if (!productCols.some((c) => c.name === 'details_html')) {
-  db.exec(`ALTER TABLE products ADD COLUMN details_html TEXT DEFAULT ''`);
-}
-
-const pageCols = db.prepare('PRAGMA table_info(pages)').all().map((c) => c.name);
-for (const [name, ddl] of [
-  ['kind', `ALTER TABLE pages ADD COLUMN kind TEXT DEFAULT 'section'`],
-  ['eyebrow', `ALTER TABLE pages ADD COLUMN eyebrow TEXT DEFAULT ''`],
-  ['lead', `ALTER TABLE pages ADD COLUMN lead TEXT DEFAULT ''`],
-  ['parent_link', `ALTER TABLE pages ADD COLUMN parent_link TEXT DEFAULT ''`],
-  ['parent_label', `ALTER TABLE pages ADD COLUMN parent_label TEXT DEFAULT ''`],
-  ['html', `ALTER TABLE pages ADD COLUMN html TEXT DEFAULT ''`],
-  ['sort_order', `ALTER TABLE pages ADD COLUMN sort_order INTEGER DEFAULT 0`],
-]) {
-  if (!pageCols.includes(name)) db.exec(ddl);
-}
+addColumn('categories', 'manual', 'INTEGER DEFAULT 0');
+addColumn('products', 'details_html', "TEXT DEFAULT ''");
+addColumn('pages', 'kind', "TEXT DEFAULT 'section'");
+addColumn('pages', 'eyebrow', "TEXT DEFAULT ''");
+addColumn('pages', 'lead', "TEXT DEFAULT ''");
+addColumn('pages', 'parent_link', "TEXT DEFAULT ''");
+addColumn('pages', 'parent_label', "TEXT DEFAULT ''");
+addColumn('pages', 'html', "TEXT DEFAULT ''");
+addColumn('pages', 'sort_order', 'INTEGER DEFAULT 0');
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS page_items (
@@ -113,30 +106,11 @@ db.exec(`
   );
 `);
 
-const itemCols = db.prepare('PRAGMA table_info(page_items)').all();
-if (!itemCols.some((c) => c.name === 'published')) {
-  db.exec(`ALTER TABLE page_items ADD COLUMN published INTEGER DEFAULT 1`);
-}
-if (!itemCols.some((c) => c.name === 'created_at')) {
-  db.exec(`ALTER TABLE page_items ADD COLUMN created_at TEXT DEFAULT ''`);
-}
-if (!itemCols.some((c) => c.name === 'body')) {
-  db.exec(`ALTER TABLE page_items ADD COLUMN body TEXT DEFAULT ''`);
-}
-if (!itemCols.some((c) => c.name === 'slug')) {
-  db.exec(`ALTER TABLE page_items ADD COLUMN slug TEXT DEFAULT ''`);
-}
-if (!itemCols.some((c) => c.name === 'photos')) {
-  db.exec(`ALTER TABLE page_items ADD COLUMN photos TEXT DEFAULT ''`);
-}
-if (!itemCols.some((c) => c.name === 'videos')) {
-  db.exec(`ALTER TABLE page_items ADD COLUMN videos TEXT DEFAULT ''`);
-}
+addColumn('page_items', 'published', 'INTEGER DEFAULT 1');
+addColumn('page_items', 'created_at', "TEXT DEFAULT ''");
+addColumn('page_items', 'body', "TEXT DEFAULT ''");
+addColumn('page_items', 'slug', "TEXT DEFAULT ''");
+addColumn('page_items', 'photos', "TEXT DEFAULT ''");
+addColumn('page_items', 'videos', "TEXT DEFAULT ''");
 
 export default db;
-
-export function touch(table, id) {
-  db.prepare(
-    `UPDATE ${table} SET updated_at = datetime('now') WHERE id = ?`
-  ).run(id);
-}

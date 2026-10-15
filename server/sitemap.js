@@ -1,14 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { PUBLIC_DIR, SITE_URL } from './config.js';
-
-function xmlEscape(value) {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
-}
+import { esc } from './html.js';
 
 export function writeSitemap() {
   const names = fs
@@ -22,7 +15,7 @@ export function writeSitemap() {
   const urls = names.map((name) => {
     const loc = name === 'index.html' ? `${SITE_URL}/` : `${SITE_URL}/${name}`;
     const modified = fs.statSync(path.join(PUBLIC_DIR, name)).mtime.toISOString().slice(0, 10);
-    return `  <url><loc>${xmlEscape(loc)}</loc><lastmod>${modified}</lastmod></url>`;
+    return `  <url><loc>${esc(loc)}</loc><lastmod>${modified}</lastmod></url>`;
   });
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
   fs.writeFileSync(path.join(PUBLIC_DIR, 'sitemap.xml'), xml, 'utf8');

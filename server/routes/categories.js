@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import slugify from 'slugify';
-import db, { touch } from '../db.js';
+import db from '../db.js';
 import { requireAuth } from '../auth.js';
 
 const router = Router();
@@ -74,7 +74,6 @@ router.put('/:id', requireAuth, (req, res) => {
   db.prepare(
     `UPDATE categories SET title=?, slug=?, description=?, cover_image=?, sort_order=?, parent_id=?, updated_at=datetime('now') WHERE id=?`
   ).run(title, slug, description, cover_image, sort_order, parent_id, id);
-  touch('categories', id);
   res.json(db.prepare('SELECT * FROM categories WHERE id = ?').get(id));
 });
 

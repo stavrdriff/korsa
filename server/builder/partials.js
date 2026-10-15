@@ -1,14 +1,6 @@
 /** Спільні фрагменти HTML — відповідають поточній верстці КОРСА */
 
-export const BRAND_SVG = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#1e3a5f" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="36" height="40" rx="1" stroke-width="1.6"/><rect x="9" y="7" width="30" height="34" rx="0.5" stroke-width="0.6" stroke-dasharray="1.5 1.5" opacity=".5"/><line x1="15" y1="11" x2="15" y2="37" stroke-width="2.6"/><line x1="15" y1="24" x2="32" y2="11" stroke-width="2.6"/><line x1="15" y1="24" x2="32" y2="37" stroke-width="2.6"/><circle cx="36" cy="24" r="1.4" fill="#1e3a5f" stroke="none"/></svg>`;
-
-export function esc(str = '') {
-  return String(str)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
-}
+const BRAND_SVG = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#1e3a5f" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="36" height="40" rx="1" stroke-width="1.6"/><rect x="9" y="7" width="30" height="34" rx="0.5" stroke-width="0.6" stroke-dasharray="1.5 1.5" opacity=".5"/><line x1="15" y1="11" x2="15" y2="37" stroke-width="2.6"/><line x1="15" y1="24" x2="32" y2="11" stroke-width="2.6"/><line x1="15" y1="24" x2="32" y2="37" stroke-width="2.6"/><circle cx="36" cy="24" r="1.4" fill="#1e3a5f" stroke="none"/></svg>`;
 
 export function headerHtml() {
   return `<header class="header">

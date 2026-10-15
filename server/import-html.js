@@ -3,17 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import db from './db.js';
 import { ARCHIVE_DIR } from './config.js';
-
-function decode(str = '') {
-  return String(str)
-    .replaceAll('&nbsp;', ' ')
-    .replaceAll('&amp;', '&')
-    .replaceAll('&lt;', '<')
-    .replaceAll('&gt;', '>')
-    .replaceAll('&quot;', '"')
-    .replaceAll('&#39;', "'")
-    .replaceAll('&apos;', "'");
-}
+import { esc, decode, stripScripts } from './html.js';
 
 function toPlain(html = '') {
   return decode(
@@ -31,19 +21,6 @@ function toPlain(html = '') {
 function attr(tag, name) {
   const m = String(tag).match(new RegExp(`${name}="([^"]*)"`, 'i'));
   return m ? decode(m[1]) : '';
-}
-
-function esc(str = '') {
-  return String(str)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
-}
-
-function stripDanger(html = '') {
-  return String(html)
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
 }
 
 function parseProductFile(filePath) {
@@ -141,7 +118,7 @@ function parseProductFile(filePath) {
     meta_description: metaDesc ? decode(metaDesc[1]) : '',
     specs,
     media,
-    details_html: stripDanger(chunks.join('\n')),
+    details_html: stripScripts(chunks.join('\n')),
   };
 }
 

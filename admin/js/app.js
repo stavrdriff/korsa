@@ -357,19 +357,11 @@ document.getElementById('galleryFile').addEventListener('change', async (e) => {
   const files = [...(e.target.files || [])];
   e.target.value = '';
   for (const file of files) {
-    const fd = new FormData();
-    fd.append('file', file);
     try {
-      const res = await fetch('/api/media/upload', {
-        method: 'POST',
-        body: fd,
-        credentials: 'same-origin',
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Upload failed');
-      addGalleryItem(data.path);
+      const path = await uploadImageFile(file);
+      addGalleryItem(path);
       const cover = document.getElementById('productForm').cover_image;
-      if (!cover.value) cover.value = data.path;
+      if (!cover.value) cover.value = path;
     } catch (err) {
       showFlash(err.message, false);
     }
@@ -502,10 +494,15 @@ function mountPostRte(host, html) {
     </div>
     <div class="rte__body" contenteditable="true" data-placeholder="Повний текст статті"></div>
   `;
-  const body = host.querySelector('.rte__body');
   const holder = document.createElement('div');
   holder.innerHTML = html || '';
-  body.innerHTML = cleanDetailsNode(holder).innerHTML;
+  host.querySelector('.rte__body').innerHTML = cleanDetailsNode(holder).innerHTML;
+  return bindRte(host);
+}
+
+/** Підключає панель редактора (.rte__bar) до поля .rte__body; повертає функцію, що читає очищений HTML */
+function bindRte(host) {
+  const body = host.querySelector('.rte__body');
   let range = null;
   const remember = () => {
     const sel = document.getSelection();
@@ -572,8 +569,8 @@ function mountPostRte(host, html) {
     });
   });
   const blockSelect = host.querySelector('[data-block]');
-  blockSelect.addEventListener('mousedown', () => remember());
-  blockSelect.addEventListener('change', () => {
+  blockSelect?.addEventListener('mousedown', () => remember());
+  blockSelect?.addEventListener('change', () => {
     const value = blockSelect.value;
     blockSelect.value = '';
     if (!value) return;
@@ -581,8 +578,8 @@ function mountPostRte(host, html) {
     document.execCommand('formatBlock', false, `<${value}>`);
   });
   const sizeSelect = host.querySelector('[data-size]');
-  sizeSelect.addEventListener('mousedown', () => remember());
-  sizeSelect.addEventListener('change', () => {
+  sizeSelect?.addEventListener('mousedown', () => remember());
+  sizeSelect?.addEventListener('change', () => {
     const value = sizeSelect.value;
     sizeSelect.value = '';
     if (value === '') return;
@@ -603,75 +600,13 @@ function mountPostRte(host, html) {
   return () => cleanDetailsNode(body).innerHTML.replace(/<p>\s*<\/p>/g, '').trim();
 }
 
+const readDetailsBody = bindRte(document.querySelector('#productForm .rte'));
+
 function readDetailsHtml() {
-  const clean = cleanDetailsNode(document.getElementById('detailsBody'));
-  const html = clean.innerHTML.replace(/<p>\s*<\/p>/g, '').trim();
+  const html = readDetailsBody();
   document.getElementById('detailsHtml').value = html;
   return html;
 }
-
-let detailsRange = null;
-
-function rememberDetailsRange() {
-  const body = document.getElementById('detailsBody');
-  const sel = document.getSelection();
-  if (!sel?.rangeCount || !body) return;
-  const range = sel.getRangeAt(0);
-  if (body.contains(range.commonAncestorContainer)) detailsRange = range.cloneRange();
-}
-
-function restoreDetailsRange() {
-  const body = document.getElementById('detailsBody');
-  body.focus();
-  if (!detailsRange) return;
-  const sel = document.getSelection();
-  sel.removeAllRanges();
-  sel.addRange(detailsRange);
-}
-
-function paintDetails(color) {
-  restoreDetailsRange();
-  if (!color) {
-    const sel = document.getSelection();
-    if (!sel?.rangeCount) return;
-    const range = sel.getRangeAt(0);
-    document.querySelectorAll('#detailsBody span[style*="color"]').forEach((span) => {
-      if (!range.intersectsNode(span)) return;
-      span.replaceWith(...span.childNodes);
-    });
-    rememberDetailsRange();
-    return;
-  }
-  document.execCommand('styleWithCSS', false, true);
-  document.execCommand('foreColor', false, color);
-  document.execCommand('styleWithCSS', false, false);
-  rememberDetailsRange();
-}
-
-document.querySelectorAll('.rte__bar button[data-cmd]').forEach((button) => {
-  button.addEventListener('mousedown', (e) => e.preventDefault());
-  button.addEventListener('click', () => {
-    const body = document.getElementById('detailsBody');
-    body.focus();
-    const value = button.dataset.value || null;
-    document.execCommand(button.dataset.cmd, false, value);
-  });
-});
-
-document.querySelectorAll('.rte__swatch').forEach((button) => {
-  button.addEventListener('mousedown', (e) => {
-    rememberDetailsRange();
-    e.preventDefault();
-  });
-  button.addEventListener('click', () => paintDetails(button.dataset.color || ''));
-});
-
-const rteColor = document.getElementById('rteColor');
-rteColor.addEventListener('mousedown', () => rememberDetailsRange());
-rteColor.addEventListener('input', () => paintDetails(rteColor.value));
-
-document.getElementById('detailsBody').addEventListener('mouseup', rememberDetailsRange);
-document.getElementById('detailsBody').addEventListener('keyup', rememberDetailsRange);
 
 document.getElementById('productForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -720,14 +655,10 @@ document.getElementById('uploadCoverBtn').addEventListener('click', () => {
 
 document.getElementById('coverFile').addEventListener('change', async (e) => {
   const file = e.target.files?.[0];
+  e.target.value = '';
   if (!file) return;
-  const fd = new FormData();
-  fd.append('file', file);
   try {
-    const res = await fetch('/api/media/upload', { method: 'POST', body: fd, credentials: 'same-origin' });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Upload failed');
-    document.getElementById('productForm').cover_image.value = data.path;
+    document.getElementById('productForm').cover_image.value = await uploadImageFile(file);
     showFlash('Фото завантажено');
   } catch (err) {
     showFlash(err.message, false);
@@ -827,6 +758,23 @@ function showCategoryBreadcrumb(tail) {
   });
 }
 
+function renderCategoryLinks(box, cats) {
+  box.innerHTML = cats
+    .map((c) => {
+      const hint = categoryHint(c);
+      return `<button type="button" class="cat-link" data-enter="${c.id}">
+        <span><strong>${escapeHtml(c.title)}</strong>${hint ? `<small>${escapeHtml(hint)}</small>` : ''}</span>
+        <span class="cat-link__go">${c.page_id ? 'Змінити' : 'Далі →'}</span>
+      </button>`;
+    })
+    .join('');
+  box.querySelectorAll('[data-enter]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      enterCategory(categoryCatalog.find((c) => c.id === Number(btn.dataset.enter)));
+    });
+  });
+}
+
 function renderCategoryLevel() {
   const current = categoryStack.at(-1) || null;
   const parentId = current?.id || null;
@@ -849,24 +797,10 @@ function renderCategoryLevel() {
 
   const kids = childCategories(parentId);
   const list = document.getElementById('subcatList');
-  list.innerHTML = kids.length
-    ? kids
-        .map((c) => {
-          const hint = categoryHint(c);
-          return `<button type="button" class="cat-link" data-enter="${c.id}">
-            <span><strong>${escapeHtml(c.title)}</strong>${hint ? `<small>${escapeHtml(hint)}</small>` : ''}</span>
-            <span class="cat-link__go">${c.page_id ? 'Змінити' : 'Далі →'}</span>
-          </button>`;
-        })
-        .join('')
-    : (current ? `<p style="color:var(--muted);margin:8px 0">Підкатегорій ще немає. Додайте їх кнопкою зверху.</p>` : '');
-
-  list.querySelectorAll('[data-enter]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const cat = categoryCatalog.find((c) => c.id === Number(btn.dataset.enter));
-      enterCategory(cat);
-    });
-  });
+  renderCategoryLinks(list, kids);
+  if (!kids.length && current) {
+    list.innerHTML = `<p style="color:var(--muted);margin:8px 0">Підкатегорій ще немає. Додайте їх кнопкою зверху.</p>`;
+  }
 
   const productBlock = document.getElementById('catProductBlock');
   const productBox = document.getElementById('catProducts');
@@ -937,7 +871,12 @@ async function loadCategories(reset = false) {
   renderCategoryLevel();
 }
 
-document.getElementById('cancelSubcat').addEventListener('click', () => hideSubcatForm());
+async function createSubcategory(title, parent) {
+  await api('/categories', { method: 'POST', body: { title, parent_id: parent.id, description: '' } });
+  showFlash('Підкатегорію додано');
+}
+
+document.getElementById('cancelSubcat').addEventListener('click', hideSubcatForm);
 
 document.getElementById('newSubcatForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -946,11 +885,7 @@ document.getElementById('newSubcatForm').addEventListener('submit', async (e) =>
   const title = document.getElementById('subcatTitle').value.trim();
   if (!title) return;
   try {
-    await api('/categories', {
-      method: 'POST',
-      body: { title, parent_id: current.id, description: '' },
-    });
-    showFlash('Підкатегорію додано');
+    await createSubcategory(title, current);
     loadCategories(false);
   } catch (err) {
     showFlash(err.message, false);
@@ -1028,16 +963,7 @@ function bindGroup(head) {
   };
   input.addEventListener('input', sync);
   head.querySelector('[data-add-card]').addEventListener('click', () => {
-    const row = createItemRow({
-      id: '',
-      kind: 'model',
-      group_label: input.value.trim(),
-      title: '',
-      description: '',
-      href: '',
-      image: '',
-      price: '',
-    });
+    const row = createItemRow({ kind: 'model', group_label: input.value.trim() });
     let last = head;
     let el = head.nextElementSibling;
     while (el && el.classList.contains('page-item')) {
@@ -1057,10 +983,7 @@ function createItemRow(item) {
   if (item.id) row.id = `page-item-${item.id}`;
   row.dataset.kind = item.kind || 'card';
   row.dataset.group = item.group_label || '';
-  const img = document.createElement('img');
-  img.alt = '';
-  img.referrerPolicy = 'no-referrer';
-  if (item.image) img.src = mediaSrc(item.image);
+  const img = previewImage(item.image);
   const fields = document.createElement('div');
   fields.innerHTML = `
     <input data-field="tag" value="${escapeAttr(tag)}" placeholder="теплі / холодні">
@@ -1147,15 +1070,29 @@ function fieldInput(name, value, placeholder) {
   return input;
 }
 
+function previewImage(src) {
+  const img = document.createElement('img');
+  img.alt = '';
+  img.referrerPolicy = 'no-referrer';
+  if (src) img.src = mediaSrc(src);
+  return img;
+}
+
+function removeButton(target, label = 'Прибрати') {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'btn btn-ghost';
+  button.textContent = label;
+  button.addEventListener('click', () => target.remove());
+  return button;
+}
+
 function createBlockRow(item) {
   const row = document.createElement('div');
   row.className = 'page-item';
   row.dataset.kind = 'block';
   if (item.id) row.dataset.id = String(item.id);
-  const img = document.createElement('img');
-  img.alt = '';
-  img.referrerPolicy = 'no-referrer';
-  if (item.image) img.src = mediaSrc(item.image);
+  const img = previewImage(item.image);
   const fields = document.createElement('div');
   fields.append(fieldInput('title', item.title, 'Заголовок'));
   const text = document.createElement('textarea');
@@ -1166,12 +1103,7 @@ function createBlockRow(item) {
   fields.append(fieldInput('href', item.href, 'Посилання, наприклад на відео'));
   const image = fieldInput('image', item.image, 'Посилання на фото');
   fields.append(bindPhotoUpload(image, img));
-  const remove = document.createElement('button');
-  remove.type = 'button';
-  remove.className = 'btn btn-ghost';
-  remove.textContent = 'Прибрати';
-  remove.addEventListener('click', () => row.remove());
-  fields.append(remove);
+  fields.append(removeButton(row));
   row.append(img, fields);
   return row;
 }
@@ -1185,12 +1117,7 @@ function createPriceRow(item) {
   fields.className = 'plain-fields';
   fields.append(fieldInput('title', item.title, 'Послуга'));
   fields.append(fieldInput('price', item.price, 'Ціна'));
-  const remove = document.createElement('button');
-  remove.type = 'button';
-  remove.className = 'btn btn-ghost';
-  remove.textContent = 'Прибрати';
-  remove.addEventListener('click', () => row.remove());
-  fields.append(remove);
+  fields.append(removeButton(row));
   if (item.description) {
     const text = document.createElement('textarea');
     text.dataset.field = 'description';
@@ -1207,21 +1134,13 @@ function createArticleRow(item) {
   row.className = 'page-item';
   row.dataset.kind = 'article';
   if (item.id) row.dataset.id = String(item.id);
-  const img = document.createElement('img');
-  img.alt = '';
-  img.referrerPolicy = 'no-referrer';
-  if (item.image) img.src = mediaSrc(item.image);
+  const img = previewImage(item.image);
   const fields = document.createElement('div');
   fields.append(fieldInput('title', item.title, 'Код'));
   fields.append(fieldInput('description', item.description, 'Колір'));
   const image = fieldInput('image', item.image, 'Посилання на фото');
   fields.append(bindPhotoUpload(image, img));
-  const remove = document.createElement('button');
-  remove.type = 'button';
-  remove.className = 'btn btn-ghost';
-  remove.textContent = 'Прибрати';
-  remove.addEventListener('click', () => row.remove());
-  fields.append(remove);
+  fields.append(removeButton(row));
   row.append(img, fields);
   return row;
 }
@@ -1235,12 +1154,7 @@ function createFooterRow(item) {
   fields.className = 'plain-fields';
   fields.append(fieldInput('title', item.title, 'Текст'));
   fields.append(fieldInput('href', item.href, 'Посилання'));
-  const remove = document.createElement('button');
-  remove.type = 'button';
-  remove.className = 'btn btn-ghost';
-  remove.textContent = 'Прибрати';
-  remove.addEventListener('click', () => row.remove());
-  fields.append(remove);
+  fields.append(removeButton(row));
   if (item.description) {
     const text = document.createElement('textarea');
     text.dataset.field = 'description';
@@ -1278,12 +1192,7 @@ function createShot(item) {
   image.hidden = true;
   const href = fieldInput('href', item.href || item.image, '');
   href.hidden = true;
-  const remove = document.createElement('button');
-  remove.type = 'button';
-  remove.className = 'btn btn-ghost';
-  remove.textContent = 'Прибрати';
-  remove.addEventListener('click', () => shot.remove());
-  shot.append(img, title, image, href, remove);
+  shot.append(img, title, image, href, removeButton(shot));
   return shot;
 }
 
@@ -1503,24 +1412,7 @@ async function openPageEdit(id) {
 function renderPageExtras() {
   const current = categoryStack.at(-1);
   const kids = current && !current.loose ? childCategories(current.id) : [];
-  const subBox = document.getElementById('pageSubcats');
-  subBox.innerHTML = kids.length
-    ? kids
-        .map((c) => {
-          const hint = categoryHint(c);
-          return `<button type="button" class="cat-link" data-enter="${c.id}">
-            <span><strong>${escapeHtml(c.title)}</strong>${hint ? `<small>${escapeHtml(hint)}</small>` : ''}</span>
-            <span class="cat-link__go">Змінити</span>
-          </button>`;
-        })
-        .join('')
-    : '';
-  subBox.querySelectorAll('[data-enter]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const cat = categoryCatalog.find((c) => c.id === Number(btn.dataset.enter));
-      enterCategory(cat);
-    });
-  });
+  renderCategoryLinks(document.getElementById('pageSubcats'), kids);
 }
 
 document.getElementById('pageAddSubcat').addEventListener('click', () => {
@@ -1528,11 +1420,13 @@ document.getElementById('pageAddSubcat').addEventListener('click', () => {
   document.getElementById('pageSubcatTitle').focus();
 });
 
-document.getElementById('cancelPageSubcat').addEventListener('click', () => {
+function hidePageSubcatForm() {
   const form = document.getElementById('pageSubcatForm');
   form.classList.add('hidden');
   form.reset();
-});
+}
+
+document.getElementById('cancelPageSubcat').addEventListener('click', hidePageSubcatForm);
 
 document.getElementById('pageAddProduct').addEventListener('click', () => {
   const current = categoryStack.at(-1);
@@ -1548,13 +1442,8 @@ document.getElementById('pageSubcatForm').addEventListener('submit', async (e) =
   const title = document.getElementById('pageSubcatTitle').value.trim();
   if (!title) return;
   try {
-    await api('/categories', {
-      method: 'POST',
-      body: { title, parent_id: current.id, description: '' },
-    });
-    document.getElementById('pageSubcatForm').classList.add('hidden');
-    document.getElementById('pageSubcatForm').reset();
-    showFlash('Підкатегорію додано');
+    await createSubcategory(title, current);
+    hidePageSubcatForm();
     categoryCatalog = await api('/categories');
     const fresh = categoryCatalog.find((c) => c.id === current.id);
     if (fresh) categoryStack[categoryStack.length - 1] = fresh;
@@ -1603,16 +1492,7 @@ document.getElementById('cardGroupTitle').addEventListener('keydown', (e) => {
 document.getElementById('confirmCardGroup').addEventListener('click', () => {
   const title = document.getElementById('cardGroupTitle').value.trim();
   if (!title) return;
-  addPageItem({
-    id: '',
-    kind: 'model',
-    group_label: title,
-    title: '',
-    description: '',
-    href: '',
-    image: '',
-    price: '',
-  });
+  addPageItem({ kind: 'model', group_label: title });
   document.getElementById('cardGroupTitle').value = '';
   document.getElementById('addCardGroupBox').classList.add('hidden');
   const names = document.querySelectorAll('#pageItems [data-field="title"]');
@@ -1931,12 +1811,7 @@ async function loadPosts() {
   const form = document.getElementById('postsForm');
   form.title.value = page.title || '';
   form.lead.value = page.lead || '';
-  document.getElementById('postsList').innerHTML = '';
-  (page.items || [])
-    .filter((item) => item.kind === 'post')
-    .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
-    .forEach((item) => addPostCard(item));
-  refreshPostsEmpty();
+  paintPosts(page);
 }
 
 document.getElementById('addPostBtn').addEventListener('click', () => {

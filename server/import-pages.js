@@ -2,17 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import db from './db.js';
 import { ARCHIVE_DIR } from './config.js';
-
-function decode(str = '') {
-  return String(str)
-    .replaceAll('&nbsp;', ' ')
-    .replaceAll('&amp;', '&')
-    .replaceAll('&lt;', '<')
-    .replaceAll('&gt;', '>')
-    .replaceAll('&quot;', '"')
-    .replaceAll('&#39;', "'")
-    .replaceAll('&apos;', "'");
-}
+import { decode } from './html.js';
 
 function toPlain(html = '') {
   return decode(
@@ -594,7 +584,7 @@ function parseFooter(html) {
   return items;
 }
 
-export function parsePage(filePath) {
+function parsePage(filePath) {
   const html = fs.readFileSync(filePath, 'utf8');
   if (isStandaloneProduct(html)) return null;
 
@@ -728,41 +718,4 @@ export function importPagesFromHtml() {
 
   run();
   return result;
-}
-
-export function reloadSectionItems() {
-  const files = fs
-    .readdirSync(ARCHIVE_DIR)
-    .filter((name) => name.endsWith('.html'))
-    .sort();
-  const insert = db.prepare(`
-    INSERT INTO page_items (page_id, kind, group_label, title, description, href, image, price, sort_order)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-  const totals = {};
-  const run = db.transaction(() => {
-    for (const name of files) {
-      const parsed = parsePage(path.join(ARCHIVE_DIR, name));
-      if (!parsed) continue;
-      const page = db.prepare('SELECT id FROM pages WHERE slug = ?').get(parsed.slug);
-      if (!page) continue;
-      db.prepare('DELETE FROM page_items WHERE page_id = ?').run(page.id);
-      parsed.items.forEach((item, i) => {
-        insert.run(
-          page.id,
-          item.kind,
-          item.group_label || '',
-          item.title || '',
-          item.description || '',
-          item.href || '',
-          item.image || '',
-          item.price || '',
-          i
-        );
-        totals[item.kind] = (totals[item.kind] || 0) + 1;
-      });
-    }
-  });
-  run();
-  return totals;
 }
