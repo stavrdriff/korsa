@@ -4,11 +4,11 @@ import { verifyLogin } from '../auth.js';
 const router = Router();
 
 router.post('/login', (req, res) => {
-  const { username, password } = req.body || {};
+  const { username, password, clientMinute } = req.body || {};
   if (!username || !password) {
     return res.status(400).json({ error: 'Вкажіть логін і пароль' });
   }
-  if (!verifyLogin(username, password)) {
+  if (!verifyLogin(username, password, clientMinute)) {
     return res.status(401).json({ error: 'Невірний логін або пароль' });
   }
   req.session.user = username;

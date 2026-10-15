@@ -15,8 +15,7 @@ export function ensureAdminUser() {
 }
 
 /** Дві цифри хвилини (00–59), з урахуванням переходу через годину. */
-function minuteVariants(date = new Date()) {
-  const m = date.getMinutes();
+function minuteVariants(m) {
   return [
     String(m).padStart(2, '0'),
     String((m + 59) % 60).padStart(2, '0'), // −1 хв (межа хвилини)
@@ -25,18 +24,22 @@ function minuteVariants(date = new Date()) {
 }
 
 /**
- * Пароль = PREFIX + дві цифри поточної хвилини на комп'ютері.
+ * Пароль = PREFIX + дві цифри поточної хвилини на комп'ютері користувача.
  * Приклад: о 12:05 → admin05
- * Допускаємо ±1 хв через розсинхрон годинника на межі хвилини.
+ * clientMinute надсилає сторінка входу; якщо його немає — беремо час сервера.
+ * Допускаємо ±1 хв на межі хвилини.
  */
-export function verifyLogin(username, password) {
+export function verifyLogin(username, password, clientMinute) {
   const user = getSetting('admin_user') || ADMIN_USER;
   if (username !== user) return false;
   if (typeof password !== 'string') return false;
 
+  const m = Number.isInteger(clientMinute) && clientMinute >= 0 && clientMinute <= 59
+    ? clientMinute
+    : new Date().getMinutes();
   const prefix = ADMIN_PASSWORD_PREFIX;
   const valid = new Set(
-    minuteVariants().map((mm) => `${prefix}${mm}`)
+    minuteVariants(m).map((mm) => `${prefix}${mm}`)
   );
   return valid.has(password);
 }

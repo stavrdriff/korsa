@@ -17,7 +17,8 @@ form.addEventListener('submit', async (e) => {
   try {
     await api('/auth/login', {
       method: 'POST',
-      body: { username, password },
+      // Хвилина за годинником комп'ютера користувача — пароль звіряється з нею
+      body: { username, password, clientMinute: new Date().getMinutes() },
     });
     location.href = '/admin/';
   } catch (err) {
