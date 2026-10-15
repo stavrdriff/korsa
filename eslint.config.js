@@ -16,6 +16,15 @@ export default [
     },
   },
   {
+    // Точка входу для Passenger (CommonJS)
+    files: ['app.cjs'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'commonjs',
+      globals: globals.node,
+    },
+  },
+  {
     // Адмінка: браузер, <script type="module">
     files: ['admin/**/*.js'],
     languageOptions: {

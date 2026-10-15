@@ -11,7 +11,8 @@
     "db:import": "node server/import-html.js",
     "publish": "node server/publish-cli.js",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "pack:hosting": "bash scripts/pack-hosting.sh"
   },
   "engines": {
     "node": ">=20"
