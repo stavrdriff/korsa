@@ -280,6 +280,12 @@ textarea { min-height: 90px; resize: vertical; }
   border: 1px solid var(--line);
   background: #f4f7fc;
 }
+/* Фото не задане — показуємо пунктирну рамку «без фото», а не порожній квадрат */
+.page-item img:not([src]),
+.page-item img[src=""] {
+  border-style: dashed;
+  background: #f4f7fc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Ctext x='32' y='36' font-family='sans-serif' font-size='10' fill='%2394a3b8' text-anchor='middle'%3E%D0%B1%D0%B5%D0%B7 %D1%84%D0%BE%D1%82%D0%BE%3C/text%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
 .page-item input,
 .page-item textarea { margin-bottom: 6px; }
 .page-item textarea { min-height: 64px; }
@@ -498,7 +504,8 @@ textarea { min-height: 90px; resize: vertical; }
 .page-shot {
   width: 112px;
 }
-.page-shot img {
+.page-shot img,
+.page-shot video {
   width: 112px;
   height: 112px;
   object-fit: cover;

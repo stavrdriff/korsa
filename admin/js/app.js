@@ -1257,9 +1257,21 @@ function createShot(item) {
   shot.className = 'page-shot';
   shot.dataset.kind = 'gallery';
   if (item.id) shot.dataset.id = String(item.id);
-  const img = document.createElement('img');
-  img.alt = '';
-  img.referrerPolicy = 'no-referrer';
+  // У галереї бувають відео (mp4) — їх показуємо через <video>, бо <img> їх не відображає
+  const isVideo = /\.(mp4|webm|mov)(\?|#|$)/i.test(item.image || '');
+  const img = document.createElement(isVideo ? 'video' : 'img');
+  if (isVideo) {
+    img.muted = true;
+    img.loop = true;
+    img.playsInline = true;
+    img.preload = 'metadata';
+    img.title = 'Відео — наведіть, щоб переглянути';
+    img.addEventListener('mouseenter', () => img.play().catch(() => {}));
+    img.addEventListener('mouseleave', () => img.pause());
+  } else {
+    img.alt = '';
+    img.referrerPolicy = 'no-referrer';
+  }
   if (item.image) img.src = mediaSrc(item.image);
   const title = fieldInput('title', item.title, 'Підпис');
   const image = fieldInput('image', item.image, '');
@@ -1558,7 +1570,7 @@ document.getElementById('cancelPageBtn').addEventListener('click', () => {
   categoryStack.pop();
   if (leaving?.loose) {
     sidebarPage = null;
-    loadDashboard();
+    loadCategories(true);
     return;
   }
   const parent = categoryStack.at(-1);
@@ -1987,4 +1999,4 @@ document.getElementById('postsForm').addEventListener('submit', async (e) => {
 });
 
 await requireAuth();
-loadDashboard();
+loadCategories(true);
