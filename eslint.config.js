@@ -3,7 +3,7 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['node_modules/**', 'deploy/**', 'public/**', 'img/**', 'data/**', '_*/**'],
+    ignores: ['node_modules/**', 'dist/**', 'public/**', 'img/**', 'data/**', '_*/**'],
   },
   js.configs.recommended,
   {
@@ -12,15 +12,6 @@ export default [
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
-      globals: globals.node,
-    },
-  },
-  {
-    // Точка входу для Passenger (CommonJS)
-    files: ['app.cjs'],
-    languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'commonjs',
       globals: globals.node,
     },
   },

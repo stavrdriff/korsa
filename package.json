@@ -9,10 +9,9 @@
     "dev": "node --watch server/index.js",
     "db:seed": "node server/seed.js",
     "publish": "node server/publish-cli.js",
+    "build": "node scripts/build-static.mjs",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "deploy": "bash scripts/deploy.sh",
-    "deploy:check": "node scripts/deploy-check.mjs"
+    "lint:fix": "eslint . --fix"
   },
   "engines": {
     "node": ">=20"
