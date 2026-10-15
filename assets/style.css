@@ -414,8 +414,10 @@ img.product__img{display:block;object-fit:cover;object-position:center}
 .msgr--whatsapp{background:#25D366}
 .msgr--phone{background:var(--accent)}
 
-/* Footer */
-.footer{padding:44px 24px 26px;color:var(--text-2);font-size:14px;background:var(--surface-2);border-top:1px solid var(--line)}
+/* Footer — завжди внизу екрана, навіть коли контенту мало */
+body{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+body > *{flex-shrink:0}
+.footer{margin-top:auto;padding:44px 24px 26px;color:var(--text-2);font-size:14px;background:var(--surface-2);border-top:1px solid var(--line)}
 .footer__inner{max-width:var(--max);margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px}
 .footer h5{color:var(--text);font-size:14px;margin:0 0 12px;letter-spacing:.5px;text-transform:uppercase}
 .footer ul{list-style:none;padding:0;margin:0}
