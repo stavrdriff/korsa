@@ -1,0 +1,26 @@
+{
+  "name": "korsa-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "КОРСА — вікна двері ролетні системи",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "db:seed": "node server/seed.js",
+    "db:import": "node server/import-html.js",
+    "publish": "node server/publish-cli.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "better-sqlite3": "^11.9.1",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "multer": "^2.0.1",
+    "slugify": "^1.6.6"
+  }
+}

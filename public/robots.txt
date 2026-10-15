@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://korsadnipro.in.ua/sitemap.xml

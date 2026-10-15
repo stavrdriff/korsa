@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Адмінка — КОРСА</title>
+  <link rel="stylesheet" href="/admin/css/admin.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="sidebar__brand">КОРСА</div>
+      <div class="sidebar__sub">TimSolo</div>
+      <nav>
+        <a href="#" data-view="categories">Категорії</a>
+        <a href="#" data-view="pageEdit" data-slug="index">Головна</a>
+        <a href="#" data-view="pageEdit" data-slug="contacts">Контакти</a>
+        <a href="#" data-view="posts">Статті</a>
+        <a href="#" data-view="dashboard" class="active">Дашборд</a>
+        <a href="#" data-view="products">Товари</a>
+        <a href="/" target="_blank">Відкрити сайт ↗</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <h2 id="pageTitle">Дашборд</h2>
+        <div class="row-actions">
+          <span id="userLabel" style="color:var(--muted);font-size:14px;align-self:center"></span>
+          <button class="btn btn-ghost" id="logoutBtn" type="button">Вийти</button>
+        </div>
+      </div>
+
+      <div id="flash" class="msg hidden"></div>
+
+      <!-- Dashboard -->
+      <section id="view-dashboard" class="card">
+        <div class="stats">
+          <div class="stat"><strong id="statProducts">0</strong><span>товарів</span></div>
+          <div class="stat"><strong id="statCategories">0</strong><span>у каталозі</span></div>
+          <div class="stat"><strong id="statPublished">0</strong><span>опубліковано</span></div>
+        </div>
+      </section>
+
+      <!-- Products list -->
+      <section id="view-products" class="hidden">
+        <div class="topbar" style="margin-bottom:12px">
+          <input id="productSearch" placeholder="Пошук за назвою або slug" style="max-width:320px;margin:0">
+          <button class="btn" id="newProductBtn" type="button">+ Новий товар</button>
+        </div>
+        <p id="productFilterNote" class="hidden" style="margin:0 0 12px;font-size:14px"></p>
+        <p id="productCount" style="margin:0 0 12px;color:var(--muted);font-size:14px"></p>
+        <div class="card" style="padding:0;overflow:auto">
+          <table class="table" id="productsTable">
+            <thead>
+              <tr><th>Товар</th><th>Категорія</th><th>Статус</th><th></th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Product edit -->
+      <section id="view-product-edit" class="card hidden">
+        <form id="productForm">
+          <div class="form-grid">
+            <div>
+              <label>Назва *</label>
+              <input name="title" required>
+            </div>
+            <div>
+              <label>Slug (імʼя файлу .html)</label>
+              <input name="slug" placeholder="plisse-jm-ab-62">
+            </div>
+            <div>
+              <label>Категорія</label>
+              <select name="category_id"></select>
+            </div>
+            <div>
+              <label>Badge</label>
+              <input name="badge" placeholder="NEW / повна палітра">
+            </div>
+            <div style="grid-column:1/-1">
+              <label>Підзаголовок</label>
+              <input name="subtitle">
+            </div>
+            <div style="grid-column:1/-1">
+              <label>Опис</label>
+              <textarea name="description"></textarea>
+            </div>
+            <div style="grid-column:1/-1">
+              <h3 style="margin:8px 0;font-size:16px">Фото <span id="galleryCount" style="color:var(--muted);font-weight:500"></span></h3>
+              <div class="gallery-editor" id="galleryBox"></div>
+              <div class="row-actions" style="margin:8px 0 4px">
+                <input id="galleryUrl" placeholder="Посилання на фото" style="max-width:360px;margin:0">
+                <button type="button" class="btn btn-ghost" id="addGalleryUrl">Додати посилання</button>
+                <button type="button" class="btn btn-ghost" id="uploadGalleryBtn">Завантажити фото</button>
+                <input type="file" id="galleryFile" accept="image/*" multiple class="hidden">
+              </div>
+            </div>
+            <div style="grid-column:1/-1">
+              <h3 style="margin:12px 0 8px;font-size:16px">Характеристики <span id="specCount" style="color:var(--muted);font-weight:500"></span></h3>
+              <div class="specs-editor" id="specsBox"></div>
+              <button type="button" class="btn btn-ghost" id="addSpecBtn">+ характеристика</button>
+            </div>
+            <div>
+              <label>Обкладинка (URL або /uploads/…)</label>
+              <input name="cover_image">
+              <input type="file" id="coverFile" accept="image/*" class="hidden">
+              <button type="button" class="btn btn-ghost" id="uploadCoverBtn">Завантажити обкладинку</button>
+            </div>
+            <div>
+              <label>Опубліковано</label>
+              <label style="font-weight:400;display:flex;align-items:center;gap:8px;margin-top:8px">
+                <input type="checkbox" name="published" checked style="width:auto;margin:0"> так, генерувати HTML
+              </label>
+            </div>
+            <div>
+              <label>YouTube URL</label>
+              <input name="video_url">
+            </div>
+            <div>
+              <label>Постер відео</label>
+              <input name="video_poster" placeholder="Посилання на фото">
+              <input type="file" id="posterFile" accept="image/*" class="hidden">
+              <button type="button" class="btn btn-ghost" id="uploadPosterBtn">Завантажити фото</button>
+            </div>
+            <div>
+              <label>Посилання «назад» (html)</label>
+              <input name="parent_link" placeholder="shtory-plise.html">
+            </div>
+            <div>
+              <label>Текст «назад»</label>
+              <input name="parent_label" placeholder="Штори Плісе">
+            </div>
+            <div>
+              <label>SEO title</label>
+              <input name="meta_title">
+            </div>
+            <div>
+              <label>SEO description</label>
+              <input name="meta_description">
+            </div>
+          </div>
+
+          <h3 style="margin:20px 0 8px;font-size:16px">Додатковий блок</h3>
+          <div class="rte">
+            <div class="rte__bar">
+              <button type="button" data-cmd="bold"><b>Ж</b></button>
+              <button type="button" data-cmd="italic"><i>К</i></button>
+              <button type="button" data-cmd="formatBlock" data-value="h3">Заголовок</button>
+              <button type="button" data-cmd="insertUnorderedList">Список</button>
+              <button type="button" data-cmd="insertOrderedList">1. 2. 3.</button>
+              <span class="rte__colors">
+                <button type="button" class="rte__swatch rte__swatch--clear" data-color="" title="Звичайний">А</button>
+                <button type="button" class="rte__swatch" data-color="#1e3a5f" style="--swatch:#1e3a5f" title="Синій"></button>
+                <button type="button" class="rte__swatch" data-color="#2d5a8e" style="--swatch:#2d5a8e" title="Блакитний"></button>
+                <button type="button" class="rte__swatch" data-color="#0f6e56" style="--swatch:#0f6e56" title="Зелений"></button>
+                <button type="button" class="rte__swatch" data-color="#b45309" style="--swatch:#b45309" title="Помаранчевий"></button>
+                <button type="button" class="rte__swatch" data-color="#c0392b" style="--swatch:#c0392b" title="Червоний"></button>
+                <button type="button" class="rte__swatch" data-color="#7a4e2d" style="--swatch:#7a4e2d" title="Коричневий"></button>
+                <button type="button" class="rte__swatch" data-color="#5c6b7a" style="--swatch:#5c6b7a" title="Сірий"></button>
+                <label class="rte__custom" title="Свій колір">
+                  <input id="rteColor" type="color" value="#c0392b" aria-label="Свій колір">
+                </label>
+              </span>
+            </div>
+            <div id="detailsBody" class="rte__body" contenteditable="true" data-placeholder="Кольори, примітки, списки"></div>
+          </div>
+          <textarea name="details_html" id="detailsHtml" hidden></textarea>
+
+          <div class="row-actions" style="margin-top:22px">
+            <button class="btn" type="submit">Зберегти</button>
+            <button class="btn btn-ghost" type="button" id="cancelProductBtn">Скасувати</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="view-page-edit" class="hidden">
+        <div class="row-actions" style="margin-bottom:12px">
+          <button class="btn btn-ghost" type="button" id="pageAddSubcat">+ Підкатегорія</button>
+          <button class="btn" type="button" id="pageAddProduct">+ Товар</button>
+        </div>
+        <form id="pageSubcatForm" class="card hidden">
+          <label for="pageSubcatTitle">Назва підкатегорії</label>
+          <input id="pageSubcatTitle" name="title" required placeholder="Наприклад: Міжкімнатні двері">
+          <div class="row-actions">
+            <button class="btn" type="submit">Додати</button>
+            <button class="btn btn-ghost" type="button" id="cancelPageSubcat">Скасувати</button>
+          </div>
+        </form>
+        <div id="pageSubcats"></div>
+        <form id="pageForm" class="card" style="margin-top:18px">
+          <div class="form-grid">
+            <div>
+              <label>Заголовок</label>
+              <input name="title" required>
+            </div>
+            <div>
+              <label>Надпис зверху</label>
+              <input name="eyebrow">
+            </div>
+            <div style="grid-column:1/-1">
+              <label>Текст</label>
+              <textarea name="lead"></textarea>
+            </div>
+            <div>
+              <label>Куди веде «назад»</label>
+              <input name="parent_link" placeholder="catalog.html">
+            </div>
+            <div>
+              <label>Текст «назад»</label>
+              <input name="parent_label" placeholder="Каталог">
+            </div>
+            <div>
+              <label>Заголовок у вкладці браузера</label>
+              <input name="meta_title">
+            </div>
+            <div>
+              <label>Короткий опис для пошуку</label>
+              <input name="meta_description">
+            </div>
+          </div>
+          <div id="pageChips"></div>
+          <div id="pageBlocks"></div>
+          <div id="pagePrices"></div>
+          <div id="pageArticles"></div>
+          <div class="row-actions" style="margin:8px 0">
+            <h3 style="margin:0;font-size:16px">Картки і моделі</h3>
+            <button class="btn btn-ghost" type="button" id="showCardGroup">+ Підкатегорія</button>
+          </div>
+          <div id="addCardGroupBox" class="row-actions hidden" style="margin-bottom:12px">
+            <input id="cardGroupTitle" placeholder="Наприклад: Скляні конструкції" style="max-width:360px;margin:0">
+            <button class="btn" type="button" id="confirmCardGroup">Додати</button>
+            <button class="btn btn-ghost" type="button" id="cancelCardGroup">Скасувати</button>
+          </div>
+          <div id="pageItems"></div>
+          <div id="pageShots"></div>
+          <div id="pageFooter"></div>
+          <div class="row-actions" style="margin-top:22px">
+            <button class="btn" type="submit">Зберегти</button>
+            <button class="btn btn-ghost" type="button" id="cancelPageBtn">Назад</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="view-posts" class="hidden">
+        <form id="postsForm" class="card">
+          <div class="row-actions" style="justify-content:flex-end;margin:0 0 16px">
+            <button class="btn" type="submit">Зберегти зміни</button>
+          </div>
+          <div class="form-grid">
+            <div>
+              <label>Заголовок сторінки</label>
+              <input name="title" required>
+            </div>
+            <div style="grid-column:1/-1">
+              <label>Текст під заголовком</label>
+              <textarea name="lead"></textarea>
+            </div>
+          </div>
+          <div class="row-actions" style="margin:4px 0 12px">
+            <h3 style="margin:0;font-size:16px">Матеріали</h3>
+            <button class="btn btn-ghost" type="button" id="addPostBtn">+ Матеріал</button>
+          </div>
+          <p id="postsEmpty" style="color:var(--muted);margin:0 0 12px">Ще немає матеріалів. Натисніть «+ Матеріал».</p>
+          <div id="postsList"></div>
+        </form>
+      </section>
+
+      <!-- Categories: one level at a time, path is the breadcrumb in the title -->
+      <section id="view-categories" class="hidden">
+        <div class="row-actions" id="catActions" style="margin-bottom:12px"></div>
+        <form id="newSubcatForm" class="card hidden">
+          <label for="subcatTitle">Назва підкатегорії</label>
+          <input id="subcatTitle" name="title" required placeholder="Наприклад: Міжкімнатні двері">
+          <div class="row-actions">
+            <button class="btn" type="submit">Додати</button>
+            <button class="btn btn-ghost" type="button" id="cancelSubcat">Скасувати</button>
+          </div>
+        </form>
+        <div id="subcatList"></div>
+        <div id="catProductBlock" class="hidden">
+          <h3 style="margin:18px 0 8px;font-size:16px">Товари тут</h3>
+          <div id="catProducts"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script type="module" src="/admin/js/app.js"></script>
+</body>
+</html>

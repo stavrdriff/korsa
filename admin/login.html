@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Вхід — КОРСА CMS</title>
+  <link rel="stylesheet" href="/admin/css/admin.css">
+</head>
+<body class="login-page">
+  <form class="login-card" id="loginForm">
+    <h1>КОРСА · адмінка</h1>
+    <div id="msg" class="msg hidden"></div>
+    <label for="username">Логін</label>
+    <input id="username" name="username" autocomplete="username" required value="admin">
+    <label for="password">Пароль</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <button class="btn btn-block" type="submit">Увійти</button>
+  </form>
+  <script type="module" src="/admin/js/login.js"></script>
+</body>
+</html>

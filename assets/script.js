@@ -68,33 +68,56 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Lightbox for fabric / pillow gallery items
+  // Lightbox: article photos and gallery tiles
   let lightbox = document.getElementById('lightbox');
-  if (!lightbox) {
+  if (!lightbox || !lightbox.querySelector('.lightbox__nav')) {
+    if (lightbox) lightbox.remove();
     lightbox = document.createElement('div');
     lightbox.id = 'lightbox';
     lightbox.className = 'lightbox';
-    lightbox.innerHTML = '<button class="lightbox__close" aria-label="Закрити">✕</button><img alt="">';
+    lightbox.innerHTML = '<button type="button" class="lightbox__close" aria-label="Закрити">✕</button><button type="button" class="lightbox__nav lightbox__nav--prev" aria-label="Попереднє">‹</button><img alt=""><button type="button" class="lightbox__nav lightbox__nav--next" aria-label="Наступне">›</button>';
     document.body.appendChild(lightbox);
   }
   const lbImg = lightbox.querySelector('img');
-  document.querySelectorAll('.gallery__item').forEach(item => {
-    item.addEventListener('click', () => {
-      const img = item.querySelector('img');
-      if (!img) return;
-      lbImg.src = img.src;
-      lightbox.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    });
-  });
-  lightbox.addEventListener('click', () => {
+  const prevBtn = lightbox.querySelector('.lightbox__nav--prev');
+  const nextBtn = lightbox.querySelector('.lightbox__nav--next');
+  let frames = [];
+  let index = 0;
+  const show = (i) => {
+    if (!frames.length) return;
+    index = (i + frames.length) % frames.length;
+    const img = frames[index];
+    lbImg.src = img.currentSrc || img.src;
+    lbImg.alt = img.alt || '';
+    const many = frames.length > 1;
+    prevBtn.hidden = !many;
+    nextBtn.hidden = !many;
+    lightbox.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  };
+  const close = () => {
     lightbox.classList.remove('active');
     document.body.style.overflow = '';
+  };
+  document.querySelectorAll('.gallery__item, .post-shot').forEach((item) => {
+    item.addEventListener('click', (e) => {
+      const img = item.querySelector('img');
+      if (!img) return;
+      e.preventDefault();
+      const group = item.closest('.post-gallery, .gallery') || item.parentElement;
+      frames = [...group.querySelectorAll('.post-shot img, .gallery__item img')];
+      show(Math.max(0, frames.indexOf(img)));
+    });
   });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && lightbox.classList.contains('active')) {
-      lightbox.classList.remove('active');
-      document.body.style.overflow = '';
-    }
+  prevBtn.addEventListener('click', (e) => { e.stopPropagation(); show(index - 1); });
+  nextBtn.addEventListener('click', (e) => { e.stopPropagation(); show(index + 1); });
+  lightbox.querySelector('.lightbox__close').addEventListener('click', (e) => { e.stopPropagation(); close(); });
+  lbImg.addEventListener('click', (e) => e.stopPropagation());
+  lightbox.addEventListener('click', close);
+  document.addEventListener('keydown', (e) => {
+    if (!lightbox.classList.contains('active')) return;
+    if (e.key === 'Escape') close();
+    if (e.key === 'ArrowRight') show(index + 1);
+    if (e.key === 'ArrowLeft') show(index - 1);
   });
 });
