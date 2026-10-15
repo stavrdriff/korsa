@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (text.includes('РРЦ')) {
       // "X грн РРЦ" → "від X грн"
       el.innerHTML = el.innerHTML
-        .replace(/(\d[\d\s ]*\d|\d)\s*грн\s*РРЦ/i, '<strong>від $1 грн</strong>')
+        .replace(/(\d[\d\s\u00a0]*\d|\d)\s*грн\s*РРЦ/i, '<strong>від $1 грн</strong>')
         .replace(/<span[^>]*>\s*РРЦ\s*<\/span>/i, '');
       // Remove the leading <span> if it was leftover from the original split layout
     }

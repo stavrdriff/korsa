@@ -9,7 +9,9 @@
     "dev": "node --watch server/index.js",
     "db:seed": "node server/seed.js",
     "db:import": "node server/import-html.js",
-    "publish": "node server/publish-cli.js"
+    "publish": "node server/publish-cli.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "engines": {
     "node": ">=20"
@@ -22,5 +24,10 @@
     "express-session": "^1.18.1",
     "multer": "^2.0.1",
     "slugify": "^1.6.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0"
   }
 }

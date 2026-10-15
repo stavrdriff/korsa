@@ -12,7 +12,7 @@ const storage = multer.diskStorage({
   filename: (_req, file, cb) => {
     const safe = file.originalname
       .normalize('NFKD')
-      .replace(/[^\w.\-]+/g, '_')
+      .replace(/[^\w.-]+/g, '_')
       .toLowerCase();
     cb(null, `${Date.now()}-${safe}`);
   },
