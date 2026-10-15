@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # Готує сайт до заливки на cPanel-хостинг (Setup Node.js App).
 #
-#   npm run deploy               → deploy/korsa/ (папка для FTP) + deploy/korsa.zip (для передачі)
-#   npm run deploy -- --no-zip   → лише папка deploy/korsa/
+#   npm run deploy               → лінтер → deploy/korsa/ (папка для FTP) + deploy/korsa.zip → перевірка
+#   npm run deploy -- --no-zip   → те саме, але без korsa.zip
+#
+# Якщо лінтер знаходить помилки — збирання не починається.
+# Якщо перевірка (scripts/deploy-check.mjs) не пройшла — korsa.zip видаляється,
+# щоб не передати зламану збірку, і команда завершується з помилкою.
 #
 # У deploy/korsa/ лежить усе потрібне: код, адмінка, сторінки, картинки (без
 # невикористовуваних *.jpg~), копія бази та .env. node_modules НЕ кладемо —
@@ -21,6 +25,12 @@ ZIP=1
 [ "${1:-}" = "--no-zip" ] && ZIP=0
 
 cd "$ROOT"
+
+echo "→ Лінтер"
+if ! npx eslint . --quiet; then
+  echo "✗ Лінтер знайшов помилки — збирання скасовано. Виправте їх (npm run lint) і повторіть."
+  exit 1
+fi
 
 if [ ! -f .env.hosting ]; then
   secret="$(node -e "console.log(require('crypto').randomBytes(48).toString('hex'))")"
@@ -79,6 +89,14 @@ with zipfile.ZipFile('korsa.zip') as z:
         sys.exit('В архіві немає .env')
 EOF
   )
+fi
+
+echo
+echo "→ Перевірка збірки"
+if ! node scripts/deploy-check.mjs; then
+  rm -f "$OUT/korsa.zip"
+  echo "✗ Збірка не пройшла перевірку — korsa.zip видалено, передавати не можна."
+  exit 1
 fi
 
 echo

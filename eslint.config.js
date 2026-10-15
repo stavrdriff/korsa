@@ -3,12 +3,12 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['node_modules/**', 'old/**', 'public/**', 'img/**', 'data/**', '_*/**'],
+    ignores: ['node_modules/**', 'deploy/**', 'old/**', 'public/**', 'img/**', 'data/**', '_*/**'],
   },
   js.configs.recommended,
   {
     // Сервер CMS: Node.js, ES-модулі
-    files: ['server/**/*.js', 'eslint.config.js'],
+    files: ['server/**/*.js', 'scripts/**/*.mjs', 'eslint.config.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

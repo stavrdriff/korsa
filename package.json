@@ -12,7 +12,8 @@
     "publish": "node server/publish-cli.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "deploy": "bash scripts/deploy.sh"
+    "deploy": "bash scripts/deploy.sh",
+    "deploy:check": "node scripts/deploy-check.mjs"
   },
   "engines": {
     "node": ">=20"
