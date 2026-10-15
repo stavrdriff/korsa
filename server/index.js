@@ -16,7 +16,6 @@ import categoryRoutes from './routes/categories.js';
 import productRoutes from './routes/products.js';
 import mediaRoutes from './routes/media.js';
 import publishRoutes from './routes/publish.js';
-import importRoutes from './routes/import.js';
 import pageRoutes from './routes/pages.js';
 import { writeSitemap } from './sitemap.js';
 
@@ -44,7 +43,6 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/publish', publishRoutes);
-app.use('/api/import', importRoutes);
 app.use('/api/pages', pageRoutes);
 
 app.use('/uploads', express.static(UPLOADS_DIR));

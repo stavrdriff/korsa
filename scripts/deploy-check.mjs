@@ -63,7 +63,6 @@ for (const item of ['.env', 'app.cjs', 'package.json', 'package-lock.json', 'DEP
   check(fs.existsSync(path.join(APP, item)), item);
 }
 check(!fs.existsSync(path.join(APP, 'node_modules')), 'немає node_modules (cPanel ставить сам)');
-check(!fs.existsSync(path.join(APP, 'old')), 'немає old/');
 const stray = fs.readdirSync(path.join(APP, 'data')).filter((f) => /\.sqlite-(wal|shm)$/.test(f));
 check(stray.length === 0, 'база без службових -wal/-shm файлів', stray.join(', '));
 
@@ -152,7 +151,7 @@ try {
 
   // ── 6. Закриті файли ──
   section('6. Службові файли недоступні з браузера');
-  for (const p of ['/.env', '/data/cms.sqlite', '/server/config.js', '/package.json', '/old/', '/node_modules/express/package.json']) {
+  for (const p of ['/.env', '/data/cms.sqlite', '/server/config.js', '/package.json', '/node_modules/express/package.json']) {
     const res = await get(p);
     check(!res.ok, `${p} → ${res.status}`);
   }

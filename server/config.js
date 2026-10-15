@@ -10,7 +10,6 @@ export const DATA_DIR = path.join(ROOT, 'data');
 export const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
 export const DB_PATH = path.join(DATA_DIR, 'cms.sqlite');
 export const PUBLIC_DIR = path.join(ROOT, 'public');
-export const ARCHIVE_DIR = path.join(ROOT, 'old');
 
 export const SITE_URL = String(process.env.SITE_URL || 'https://korsadnipro.in.ua').replace(/\/$/, '');
 export const PORT = Number(process.env.PORT) || 3000;

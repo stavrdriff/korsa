@@ -15,9 +15,8 @@ export function publishAllPages() {
   const results = [];
   for (const row of rows) {
     if (!safeSlug(row.slug)) continue;
-    const html = String(row.html).replaceAll('old/', '');
     const out = path.join(PUBLIC_DIR, `${row.slug}.html`);
-    fs.writeFileSync(out, html, 'utf8');
+    fs.writeFileSync(out, row.html, 'utf8');
     results.push({ slug: row.slug, path: out });
   }
   writeSitemap();
