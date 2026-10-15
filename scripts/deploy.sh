@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Готує сайт до заливки на cPanel-хостинг (Setup Node.js App).
 #
-#   npm run pack:hosting               → deploy/korsa/  (папка для заливки по FTP)
-#   npm run pack:hosting -- --archives → ще й deploy/korsa-app.tar.gz + deploy/korsa-img.tar
+#   npm run deploy               → deploy/korsa/ (папка для FTP) + deploy/korsa.zip (для передачі)
+#   npm run deploy -- --no-zip   → лише папка deploy/korsa/
 #
 # У deploy/korsa/ лежить усе потрібне: код, адмінка, сторінки, картинки (без
 # невикористовуваних *.jpg~), копія бази та .env. node_modules НЕ кладемо —
@@ -17,8 +17,8 @@ OUT="$ROOT/deploy"
 APP="$OUT/korsa"
 export COPYFILE_DISABLE=1 # без службових ._* файлів macOS
 
-ARCHIVES=0
-[ "${1:-}" = "--archives" ] && ARCHIVES=1
+ZIP=1
+[ "${1:-}" = "--no-zip" ] && ZIP=0
 
 cd "$ROOT"
 
@@ -55,13 +55,33 @@ echo "   integrity: $(sqlite3 "$APP/data/cms.sqlite" 'PRAGMA integrity_check;')"
 echo "→ Копіюю картинки та відео (займе хвилину)"
 rsync -a --exclude '*.jpg~' --exclude .DS_Store img "$APP/"
 
-if [ "$ARCHIVES" = 1 ]; then
-  echo "→ Пакую архіви"
-  tar -czf "$OUT/korsa-app.tar.gz" -C "$APP" --exclude ./img .
-  tar -cf "$OUT/korsa-img.tar" -C "$APP" img
+if [ "$ZIP" = 1 ]; then
+  echo "→ Пакую korsa.zip"
+  # Python, а не zip з macOS: він позначає кириличні імена як UTF-8,
+  # інакше на Windows вони розпакуються «кракозябрами».
+  (cd "$OUT" && python3 -I - <<'EOF'
+import os, sys, zipfile, unicodedata
+media = ('.jpg', '.jpeg', '.png', '.webp', '.gif', '.mp4')
+with zipfile.ZipFile('korsa.zip', 'w', allowZip64=True) as z:
+    for root, dirs, files in os.walk('korsa'):
+        dirs.sort()
+        for f in sorted(files):
+            p = os.path.join(root, f)
+            comp = zipfile.ZIP_STORED if f.lower().endswith(media) else zipfile.ZIP_DEFLATED
+            z.write(p, unicodedata.normalize('NFC', p), compress_type=comp)
+        if not files and not dirs:  # порожні теки (data/uploads)
+            z.writestr(unicodedata.normalize('NFC', root) + '/', '')
+with zipfile.ZipFile('korsa.zip') as z:
+    bad = z.testzip()
+    if bad:
+        sys.exit(f'Пошкоджений файл в архіві: {bad}')
+    if 'korsa/.env' not in z.namelist():
+        sys.exit('В архіві немає .env')
+EOF
+  )
 fi
 
 echo
 echo "Готово: $APP"
 echo "   файлів: $(find "$APP" -type f | wc -l | tr -d ' '), розмір: $(du -sh "$APP" | cut -f1)"
-[ "$ARCHIVES" = 1 ] && ls -lh "$OUT"/*.tar* || true
+[ "$ZIP" = 1 ] && echo "Архів:  $OUT/korsa.zip ($(du -h "$OUT/korsa.zip" | cut -f1))" || true

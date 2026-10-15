@@ -12,7 +12,7 @@
     "publish": "node server/publish-cli.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "pack:hosting": "bash scripts/pack-hosting.sh"
+    "deploy": "bash scripts/deploy.sh"
   },
   "engines": {
     "node": ">=20"
