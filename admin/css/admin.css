@@ -192,18 +192,12 @@ textarea { min-height: 90px; resize: vertical; }
 .badge--off { background: #fef3f2; color: var(--danger); }
 
 .row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.form-actions { margin-top: 22px; }
 
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0 16px;
-}
-
-@media (max-width: 800px) {
-  .shell { grid-template-columns: 1fr; }
-  .sidebar { padding-bottom: 8px; }
-  .form-grid { grid-template-columns: 1fr; }
-  .plain-fields { grid-template-columns: 1fr; }
 }
 
 .specs-editor { margin-top: 8px; }
@@ -448,6 +442,9 @@ textarea { min-height: 90px; resize: vertical; }
   background: #fff;
   cursor: pointer;
 }
+.rte__custom input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.rte__custom input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 50%; }
+.rte__custom input[type="color"]::-moz-color-swatch { border: 0; border-radius: 50%; }
 .rte__body span[style*="color"] { font: inherit; }
 .rte__body {
   min-height: 160px;
@@ -546,3 +543,115 @@ textarea { min-height: 90px; resize: vertical; }
 .cat-link strong { display: block; font-size: 16px; }
 .cat-link small { color: var(--muted); font-size: 13px; }
 .cat-link__go { color: var(--accent); font-weight: 700; }
+
+/* ── Телефон ── */
+@media (max-width: 800px) {
+  .shell { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
+  .main { min-width: 0; }
+
+  /* Меню — липка смужка зверху, пункти гортаються вбік */
+  .sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+  }
+  .sidebar__brand { margin: 0; font-size: 16px; }
+  .sidebar__sub { display: none; }
+  .sidebar nav {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .sidebar nav::-webkit-scrollbar { display: none; }
+  .sidebar nav a { flex: none; margin: 0; padding: 8px 12px; white-space: nowrap; }
+
+  .main { padding: 16px 12px 40px; }
+  .topbar { margin-bottom: 16px; }
+  .topbar h2,
+  .topbar .crumbs,
+  .topbar .crumbs button { font-size: 16px; }
+  .card { padding: 14px; }
+
+  /* Дрібніший шрифт на телефоні. Автозбільшення iPhone при фокусі на полі
+     вимкнене через maximum-scale=1 у viewport, тому поля можуть бути < 16px */
+  body { font-size: 14px; }
+  input, select, textarea { font-size: 14px; padding: 8px 10px; }
+  label { font-size: 12px; }
+  .btn { font-size: 13px; padding: 8px 12px; }
+  .sidebar nav a { font-size: 13px; }
+  /* Заголовки секцій мають розмір у style="" — перекриваємо; заголовки в тексті статті не чіпаємо */
+  h3[style] { font-size: 15px !important; }
+  .cat-link strong { font-size: 15px; }
+  .cat-link small { font-size: 12px; }
+  .table { font-size: 13px; }
+  .rte__bar button, .rte__bar select { font-size: 12px; }
+
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid > div { grid-column: 1 / -1 !important; }
+  .plain-fields { grid-template-columns: 1fr; }
+
+  /* Кнопка «Зберегти» завжди під рукою внизу екрана */
+  .form-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    margin: 22px -14px -14px;
+    padding: 10px 14px;
+    background: var(--panel);
+    border-top: 1px solid var(--line);
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+  .form-actions .btn { flex: 1; }
+
+  /* Повідомлення видно, хоч би де ви були на сторінці */
+  #flash {
+    position: fixed;
+    top: 60px;
+    left: 12px;
+    right: 12px;
+    z-index: 30;
+    box-shadow: 0 6px 24px rgba(30, 58, 95, 0.18);
+  }
+
+  /* Таблиця товарів — картками */
+  .table thead { display: none; }
+  .table tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 10px;
+    padding: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .table td { padding: 0; border: 0; }
+  .table td:first-child { grid-column: 1 / -1; }
+  .table td:nth-child(2) { color: var(--muted); font-size: 13px; }
+  .table td.row-actions { grid-column: 1 / -1; }
+
+  .spec-row { grid-template-columns: 1fr auto; }
+  .spec-row input:nth-child(2) { grid-row: 2; }
+  .spec-row .btn { grid-row: 1 / span 2; grid-column: 2; }
+
+  .page-group input { max-width: none; flex: 1; }
+  .photo-row { flex-wrap: wrap; }
+  .photo-row input { flex: 1 1 100%; }
+  .page-shot { width: calc(50% - 4px); }
+  .page-shot img,
+  .page-shot video { width: 100%; height: auto; aspect-ratio: 1; }
+
+  .rte__bar button { min-height: 36px; }
+  .rte__colors { margin-left: 0; padding-left: 0; border-left: 0; flex-wrap: wrap; }
+  .rte__bar button.rte__swatch,
+  .rte__custom input[type="color"] { width: 30px; min-width: 30px; height: 30px; }
+
+  .post-card__top select { max-width: none; flex: 1; }
+  .post-photo { flex-wrap: wrap; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .post-photo .photo-row { flex: 1 1 100%; order: 3; }
+  .post-photo > .btn { order: 4; }
+
+  .cat-link { padding: 12px 14px; }
+}

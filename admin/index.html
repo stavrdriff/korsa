@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
   <title>Адмінка — КОРСА</title>
   <link rel="stylesheet" href="/admin/css/admin.css">
 </head>
@@ -45,7 +45,7 @@
       <!-- Products list -->
       <section id="view-products" class="hidden">
         <div class="topbar" style="margin-bottom:12px">
-          <input id="productSearch" placeholder="Пошук за назвою або slug" style="max-width:320px;margin:0">
+          <input id="productSearch" placeholder="Пошук за назвою або slug" style="flex:1;max-width:320px;margin:0">
           <button class="btn" id="newProductBtn" type="button">+ Новий товар</button>
         </div>
         <p id="productFilterNote" class="hidden" style="margin:0 0 12px;font-size:14px"></p>
@@ -169,7 +169,7 @@
           </div>
           <textarea name="details_html" id="detailsHtml" hidden></textarea>
 
-          <div class="row-actions" style="margin-top:22px">
+          <div class="row-actions form-actions">
             <button class="btn" type="submit">Зберегти</button>
             <button class="btn btn-ghost" type="button" id="cancelProductBtn">Скасувати</button>
           </div>
@@ -237,7 +237,7 @@
           <div id="pageItems"></div>
           <div id="pageShots"></div>
           <div id="pageFooter"></div>
-          <div class="row-actions" style="margin-top:22px">
+          <div class="row-actions form-actions">
             <button class="btn" type="submit">Зберегти</button>
             <button class="btn btn-ghost" type="button" id="cancelPageBtn">Назад</button>
           </div>

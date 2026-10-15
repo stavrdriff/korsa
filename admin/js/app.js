@@ -35,6 +35,14 @@ function showView(name, title) {
     }
     a.classList.toggle('active', active);
   });
+  // На телефоні меню гортається вбік — показуємо активний пункт
+  const current = document.querySelector('.sidebar nav a.active');
+  if (current) {
+    const nav = current.parentElement;
+    const shift = current.getBoundingClientRect().left - nav.getBoundingClientRect().left;
+    nav.scrollBy({ left: shift - 8, behavior: 'smooth' });
+  }
+  window.scrollTo(0, 0);
 }
 
 async function requireAuth() {
@@ -1179,9 +1187,10 @@ function createShot(item) {
     img.loop = true;
     img.playsInline = true;
     img.preload = 'metadata';
-    img.title = 'Відео — наведіть, щоб переглянути';
+    img.title = 'Відео — наведіть або торкніться, щоб переглянути';
     img.addEventListener('mouseenter', () => img.play().catch(() => {}));
     img.addEventListener('mouseleave', () => img.pause());
+    img.addEventListener('click', () => (img.paused ? img.play().catch(() => {}) : img.pause()));
   } else {
     img.alt = '';
     img.referrerPolicy = 'no-referrer';
