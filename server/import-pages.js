@@ -269,10 +269,6 @@ function parseArticles(html) {
 function parseDecor(html) {
   const items = [];
   const heads = groupsBefore(html);
-  const sectionOf = (htmlChunk, index, fallback) => {
-    const inner = htmlChunk.match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i);
-    return (inner ? headingText(inner[1]) : '') || groupAt(heads, index) || fallback;
-  };
 
   for (const block of sliceDivs(html, 'feature')) {
     const icon = block.html.match(/class="feature__icon">([\s\S]*?)<\/div>/i);
