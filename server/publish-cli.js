@@ -1,6 +1,8 @@
 import { publishAllPages } from './builder/pages.js';
 import { publishAllProducts } from './builder/product.js';
+import { ensureStattiPosters } from './routes/pages.js';
 
+await ensureStattiPosters();
 const pages = publishAllPages();
 console.log(`Сторінок: ${pages.length}`);
 for (const page of pages) console.log(' -', page.slug);

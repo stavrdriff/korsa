@@ -3,7 +3,7 @@ import path from 'node:path';
 import { Router } from 'express';
 import db from '../db.js';
 import { requireAuth } from '../auth.js';
-import { PUBLIC_DIR, SITE_URL } from '../config.js';
+import { PUBLIC_DIR, SITE_URL, UPLOADS_DIR } from '../config.js';
 import { writePage, writeSitemap } from '../sitemap.js';
 import { decode, esc, stripScripts } from '../html.js';
 
@@ -46,11 +46,61 @@ function youtubePoster(href) {
   return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '';
 }
 
-function instagramEmbed(href) {
+function instagramCode(href) {
   const match = String(href).match(/instagram\.com\/(?:reels?|p|tv)\/([A-Za-z0-9_-]+)/i);
-  if (!match) return '';
+  return match ? match[1] : '';
+}
+
+function instagramEmbed(href) {
+  const code = instagramCode(href);
+  if (!code) return '';
   const kind = /\/reels?\//i.test(href) ? 'reel' : /\/tv\//i.test(href) ? 'tv' : 'p';
-  return `https://www.instagram.com/${kind}/${match[1]}/embed`;
+  return `https://www.instagram.com/${kind}/${code}/embed`;
+}
+
+function instagramPosterFile(code) {
+  return `ig-${code}.jpg`;
+}
+
+/** Прев'ю Instagram — локальна копія, яку заздалегідь скачав ensureInstagramPosters */
+function instagramPoster(href) {
+  const code = instagramCode(href);
+  if (!code || !fs.existsSync(path.join(UPLOADS_DIR, instagramPosterFile(code)))) return '';
+  return `/uploads/${instagramPosterFile(code)}`;
+}
+
+function videoPoster(href) {
+  return youtubePoster(href) || instagramPoster(href);
+}
+
+async function downloadInstagramPoster(code) {
+  const headers = { 'User-Agent': 'Mozilla/5.0' };
+  const page = await fetch(`https://www.instagram.com/p/${code}/`, { headers, signal: AbortSignal.timeout(10000) });
+  if (!page.ok) return;
+  const match = (await page.text()).match(/<meta property="og:image" content="([^"]+)"/);
+  if (!match) return;
+  const image = await fetch(decode(match[1]), { headers, signal: AbortSignal.timeout(15000) });
+  if (!image.ok || !String(image.headers.get('content-type')).startsWith('image/')) return;
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  fs.writeFileSync(path.join(UPLOADS_DIR, instagramPosterFile(code)), Buffer.from(await image.arrayBuffer()));
+}
+
+/**
+ * Скачати прев'ю для Instagram-відео в постах без фото. Посилання на картинку з og:image
+ * підписане і з часом протухає, тому зберігаємо файл у uploads. Помилки не зупиняють збереження.
+ */
+export async function ensureInstagramPosters(items) {
+  const codes = new Set();
+  for (const item of items || []) {
+    if (item.kind !== 'post' || coverPhoto(item)) continue;
+    const code = instagramCode(postVideos(item)[0] || '');
+    if (code && !instagramPoster(postVideos(item)[0])) codes.add(code);
+  }
+  await Promise.all(
+    [...codes].map((code) =>
+      downloadInstagramPoster(code).catch((e) => console.warn(`Прев'ю Instagram ${code}:`, e.message))
+    )
+  );
 }
 
 function videoPlayer(url, title) {
@@ -178,10 +228,10 @@ function absoluteUrl(ref) {
   return `${SITE_URL}/${value.replace(/^\/+/, '')}`;
 }
 
-/** Основна картинка матеріалу: обкладинка, а для відео без фото — прев'ю з YouTube */
+/** Основна картинка матеріалу: обкладинка, а для відео без фото — прев'ю з YouTube чи Instagram */
 function postImage(item) {
   const videos = postVideos(item);
-  return absoluteUrl(coverPhoto(item) || (videos[0] ? youtubePoster(videos[0]) : ''));
+  return absoluteUrl(coverPhoto(item) || (videos[0] ? videoPoster(videos[0]) : ''));
 }
 
 function metaTags(tags) {
@@ -326,7 +376,7 @@ function renderStattiPosts(html, items) {
     .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
     .map((item) => {
       const videos = postVideos(item);
-      const image = coverPhoto(item) || (videos[0] ? youtubePoster(videos[0]) : '');
+      const image = coverPhoto(item) || (videos[0] ? videoPoster(videos[0]) : '');
       const label = item.group_label === 'video' || videos.length ? 'Відео' : 'Стаття';
       const media = image
         ? `<img src="${esc(image)}" alt="${esc(item.title || '')}">`
@@ -393,12 +443,18 @@ function replaceUnique(html, from, to) {
   return parts.join(to);
 }
 
+/** Докачати прев'ю Instagram для збережених статей (перед publishArticlePages) */
+export async function ensureStattiPosters() {
+  const page = db.prepare(`SELECT id FROM pages WHERE slug = 'statti'`).get();
+  if (page) await ensureInstagramPosters(loadItems(page.id));
+}
+
 /** Перегенерувати статті та statti.html з бази (для збірки — щоб OpenGraph потрапив і в уже створені) */
 export function publishArticlePages() {
   const page = db.prepare(`SELECT id, html FROM pages WHERE slug = 'statti'`).get();
   if (!page?.html) return 0;
   const items = loadItems(page.id);
-  const html = withStattiOpenGraph(page.html, items);
+  const html = withStattiOpenGraph(renderStattiPosts(page.html, items), items);
   if (html !== page.html) db.prepare(`UPDATE pages SET html = ? WHERE id = ?`).run(html, page.id);
   writePage(path.join(PUBLIC_DIR, 'statti.html'), html);
   writeArticlePages(html, items);
@@ -434,11 +490,12 @@ router.get('/:id', (req, res) => {
   res.json(page);
 });
 
-router.put('/:id', requireAuth, (req, res) => {
+router.put('/:id', requireAuth, async (req, res) => {
   const id = Number(req.params.id);
   const existing = db.prepare('SELECT * FROM pages WHERE id = ?').get(id);
   if (!existing) return res.status(404).json({ error: 'Not found' });
   const b = req.body || {};
+  if (existing.slug === 'statti' && Array.isArray(b.items)) await ensureInstagramPosters(b.items);
   const next = {
     title: b.title ?? existing.title,
     eyebrow: b.eyebrow ?? existing.eyebrow,

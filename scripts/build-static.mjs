@@ -8,6 +8,7 @@ import path from 'node:path';
 import { PUBLIC_DIR, ROOT, UPLOADS_DIR } from '../server/config.js';
 import { publishAllPages } from '../server/builder/pages.js';
 import { publishAllProducts } from '../server/builder/product.js';
+import { ensureStattiPosters } from '../server/routes/pages.js';
 
 const DIST = path.join(ROOT, 'dist');
 
@@ -48,6 +49,7 @@ function copyFile(from, rel) {
   fs.copyFileSync(from, to);
 }
 
+await ensureStattiPosters();
 const pages = publishAllPages();
 const products = publishAllProducts().filter((p) => !p.skipped);
 console.log(`→ Згенеровано з бази: сторінок ${pages.length}, товарів ${products.length}`);
