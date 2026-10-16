@@ -266,7 +266,7 @@ ${openGraphTags(item, lead)}
 ${header}
 <section class="section--blueprint section--photo-bg bg--pano">
   <div class="section__inner post-read">
-    <a class="post-back" href="statti.html">← Корисні статті та відео</a>
+    <div class="crumb"><a href="index.html">Головна</a> / <a href="statti.html">Корисні статті та відео</a> / ${esc(item.title || 'Стаття')}</div>
     <h2>${esc(item.title || '')}</h2>
     ${added ? `<p class="post-date"><time datetime="${esc(String(item.created_at).slice(0, 10))}">${esc(added)}</time></p>` : ''}
     <article>

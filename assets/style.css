@@ -104,9 +104,9 @@ body.has-photo-bg::before{
 }
 body.bg-pano::before{background-image:url('../img/bg/pano.jpg.jpg')}
 body.bg-tiles::before{background-image:url('../img/bg/tiles.jpg.jpg');background-size:200% 200%}
-body.bg-tiles.bg-pos-win::before{background-position:0% 0%}
-body.bg-tiles.bg-pos-door::before{background-position:100% 0%}
-body.bg-tiles.bg-pos-rolet::before{background-position:0% 100%}
+body.bg-tiles.bg-pos-win::before{background-position:0 0}
+body.bg-tiles.bg-pos-door::before{background-position:100% 0}
+body.bg-tiles.bg-pos-rolet::before{background-position:0 100%}
 body.bg-tiles.bg-pos-plan::before{background-position:100% 100%}
 /* Контент над фоном */
 body.has-photo-bg > *{position:relative;z-index:1}
@@ -322,7 +322,6 @@ h3,h4{color:var(--text)}
 .post-html > :first-child{margin-top:0}
 .post-html ul,.post-html ol{margin:0 0 16px;padding-left:22px}
 .post-html li{margin:0 0 6px;font-size:17px;line-height:1.65}
-.post-back{display:inline-block;margin:0 0 18px;font-weight:600}
 .cat{position:relative;display:block;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:0;overflow:hidden;transition:transform var(--t),border-color var(--t),box-shadow var(--t);box-shadow:0 1px 3px rgba(30,58,95,.04);color:var(--text)}
 .cat:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:var(--shadow-lg);color:var(--text)}
 .cat__media{aspect-ratio:16/10;width:100%;background:linear-gradient(135deg,var(--surface-2),#fff);overflow:hidden;position:relative;display:grid;place-items:center;border-bottom:1px solid var(--line)}
@@ -417,7 +416,8 @@ img.product__img{display:block;object-fit:cover;object-position:center}
 .msgr--phone{background:var(--accent)}
 
 /* Footer — завжди внизу екрана, навіть коли контенту мало */
-body{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+body{min-height:100vh;display:flex;flex-direction:column}
+@supports (min-height:100dvh){body{min-height:100dvh}}
 body > *{flex-shrink:0}
 .footer{margin-top:auto;padding:44px 24px 26px;color:var(--text-2);font-size:14px;background:var(--surface-2);border-top:1px solid var(--line)}
 .footer__inner{max-width:var(--max);margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px}
