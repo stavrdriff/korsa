@@ -1,8 +1,7 @@
-import fs from 'node:fs';
 import path from 'node:path';
 import db from '../db.js';
 import { PUBLIC_DIR } from '../config.js';
-import { writeSitemap } from '../sitemap.js';
+import { writePage, writeSitemap } from '../sitemap.js';
 import { esc, stripScripts } from '../html.js';
 import { headerHtml, footerHtml, PRODUCT_PAGE_CSS } from './partials.js';
 
@@ -148,7 +147,7 @@ export function writeProductPage(idOrSlug, options = {}) {
   }
   const html = renderProductHtml(bundle);
   const out = path.join(PUBLIC_DIR, `${bundle.product.slug}.html`);
-  fs.writeFileSync(out, html, 'utf8');
+  writePage(out, html);
   if (options.sitemap !== false) writeSitemap();
   return { path: out, slug: bundle.product.slug };
 }

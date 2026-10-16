@@ -3,9 +3,9 @@ import path from 'node:path';
 import { Router } from 'express';
 import db from '../db.js';
 import { requireAuth } from '../auth.js';
-import { PUBLIC_DIR } from '../config.js';
-import { writeSitemap } from '../sitemap.js';
-import { esc, stripScripts } from '../html.js';
+import { PUBLIC_DIR, SITE_URL } from '../config.js';
+import { writePage, writeSitemap } from '../sitemap.js';
+import { decode, esc, stripScripts } from '../html.js';
 
 const router = Router();
 
@@ -106,10 +106,10 @@ function postVideos(item) {
 }
 
 const CYR = {
-  а: 'a', б: 'b', в: 'v', г: 'h', ґ: 'g', д: 'd', е: 'e', є: 'ye', ж: 'zh', з: 'z',
-  и: 'y', і: 'i', ї: 'yi', й: 'i', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p',
-  р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'kh', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'shch',
-  ь: '', ю: 'yu', я: 'ya', ы: 'y', э: 'e', ъ: '', ё: 'yo',
+  'а': 'a', 'б': 'b', 'в': 'v', 'г': 'h', 'ґ': 'g', 'д': 'd', 'е': 'e', 'є': 'ye', 'ж': 'zh', 'з': 'z',
+  'и': 'y', 'і': 'i', 'ї': 'yi', 'й': 'i', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p',
+  'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch',
+  'ь': '', 'ю': 'yu', 'я': 'ya', 'ы': 'y', 'э': 'e', 'ъ': '', 'ё': 'yo',
 };
 
 function makeSlug(title, used) {
@@ -170,6 +170,72 @@ function cardExcerpt(item) {
   return `${plain.slice(0, 177).trim()}…`;
 }
 
+/** og:image та og:url мають бути абсолютними: «/uploads/a.jpg» → «https://сайт/uploads/a.jpg» */
+function absoluteUrl(ref) {
+  const value = String(ref || '').trim();
+  if (!value || /^https?:\/\//i.test(value)) return value;
+  if (value.startsWith('//')) return `https:${value}`;
+  return `${SITE_URL}/${value.replace(/^\/+/, '')}`;
+}
+
+/** Основна картинка матеріалу: обкладинка, а для відео без фото — прев'ю з YouTube */
+function postImage(item) {
+  const videos = postVideos(item);
+  return absoluteUrl(coverPhoto(item) || (videos[0] ? youtubePoster(videos[0]) : ''));
+}
+
+function metaTags(tags) {
+  return tags
+    .filter(Boolean)
+    .map(([attr, key, value]) => `<meta ${attr}="${key}" content="${esc(value)}">`)
+    .join('\n');
+}
+
+function openGraphTags(item, lead) {
+  const image = postImage(item);
+  const day = String(item.created_at || '').slice(0, 10);
+  return metaTags([
+    ['property', 'og:type', 'article'],
+    ['property', 'og:site_name', 'Корса'],
+    ['property', 'og:locale', 'uk_UA'],
+    ['property', 'og:title', item.title || 'Стаття'],
+    ['property', 'og:description', lead],
+    ['property', 'og:url', absoluteUrl(articleFile(item.slug))],
+    image && ['property', 'og:image', image],
+    image && ['property', 'og:image:alt', item.title || ''],
+    /^\d{4}-\d{2}-\d{2}$/.test(day) && ['property', 'article:published_time', day],
+    ['name', 'twitter:card', image ? 'summary_large_image' : 'summary'],
+  ]);
+}
+
+/** OpenGraph для statti.html: заголовок і опис беремо зі сторінки, картинку — з найновішого матеріалу */
+function withStattiOpenGraph(html, items) {
+  const title = decode((html.match(/<title>([\s\S]*?)<\/title>/i) || [])[1] || '').trim();
+  const desc = decode((html.match(/<meta name="description" content="([^"]*)"/i) || [])[1] || '');
+  const latest = (items || [])
+    .filter((item) => item.kind === 'post' && Number(item.published ?? 1))
+    .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+  const image = latest.map(postImage).find(Boolean) || '';
+  const url = absoluteUrl('statti.html');
+  const block = `<!-- og:start -->
+<link rel="canonical" href="${esc(url)}">
+${metaTags([
+  ['property', 'og:type', 'website'],
+  ['property', 'og:site_name', 'Корса'],
+  ['property', 'og:locale', 'uk_UA'],
+  ['property', 'og:title', title],
+  ['property', 'og:description', desc],
+  ['property', 'og:url', url],
+  image && ['property', 'og:image', image],
+  ['name', 'twitter:card', image ? 'summary_large_image' : 'summary'],
+])}
+<!-- og:end -->`;
+  if (/<!-- og:start -->[\s\S]*?<!-- og:end -->/.test(html)) {
+    return html.replace(/<!-- og:start -->[\s\S]*?<!-- og:end -->/, () => block);
+  }
+  return html.replace('</head>', () => `${block}\n</head>`);
+}
+
 function renderArticlePage(shell, item) {
   const header = (shell.match(/<header[\s\S]*?<\/header>/) || [''])[0];
   const footer = (shell.match(/<footer[\s\S]*?<\/footer>/) || [''])[0];
@@ -192,6 +258,8 @@ function renderArticlePage(shell, item) {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(item.title || 'Стаття')} | Корса</title>
 <meta name="description" content="${esc(lead)}">
+<link rel="canonical" href="${esc(absoluteUrl(articleFile(item.slug)))}">
+${openGraphTags(item, lead)}
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body class="has-photo-bg bg-pano">
@@ -222,7 +290,7 @@ function writeArticlePages(shell, items) {
     const name = articleFile(item.slug);
     if (!Number(item.published ?? 1)) continue;
     keep.add(name);
-    fs.writeFileSync(path.join(PUBLIC_DIR, name), renderArticlePage(shell, item), 'utf8');
+    writePage(path.join(PUBLIC_DIR, name), renderArticlePage(shell, item));
   }
   for (const name of fs.readdirSync(PUBLIC_DIR)) {
     if (/^stattia-[a-z0-9-]+\.html$/.test(name) && !keep.has(name)) {
@@ -325,17 +393,35 @@ function replaceUnique(html, from, to) {
   return parts.join(to);
 }
 
+/** Перегенерувати статті та statti.html з бази (для збірки — щоб OpenGraph потрапив і в уже створені) */
+export function publishArticlePages() {
+  const page = db.prepare(`SELECT id, html FROM pages WHERE slug = 'statti'`).get();
+  if (!page?.html) return 0;
+  const items = loadItems(page.id);
+  const html = withStattiOpenGraph(page.html, items);
+  if (html !== page.html) db.prepare(`UPDATE pages SET html = ? WHERE id = ?`).run(html, page.id);
+  writePage(path.join(PUBLIC_DIR, 'statti.html'), html);
+  writeArticlePages(html, items);
+  return items.filter((item) => item.kind === 'post' && item.slug && Number(item.published ?? 1)).length;
+}
+
 router.get('/', (_req, res) => {
   const rows = db
     .prepare(
       `SELECT p.id, p.slug, p.title, p.kind, p.eyebrow, p.lead, p.parent_link, p.parent_label,
               p.meta_title, p.published,
-              SUM(CASE WHEN i.kind = 'card' THEN 1 ELSE 0 END) AS cards,
-              SUM(CASE WHEN i.kind = 'model' THEN 1 ELSE 0 END) AS models,
-              SUM(CASE WHEN i.kind = 'gallery' THEN 1 ELSE 0 END) AS gallery
+              COALESCE(i.cards, 0) AS cards,
+              COALESCE(i.models, 0) AS models,
+              COALESCE(i.gallery, 0) AS gallery
        FROM pages p
-       LEFT JOIN page_items i ON i.page_id = p.id
-       GROUP BY p.id
+       LEFT JOIN (
+         SELECT page_id,
+                SUM(kind = 'card') AS cards,
+                SUM(kind = 'model') AS models,
+                SUM(kind = 'gallery') AS gallery
+         FROM page_items
+         GROUP BY page_id
+       ) i ON i.page_id = p.id
        ORDER BY p.sort_order, p.title`
     )
     .all();
@@ -419,7 +505,8 @@ router.put('/:id', requireAuth, (req, res) => {
       });
     }
     if (existing.slug === 'statti' && html) {
-      fs.writeFileSync(path.join(PUBLIC_DIR, 'statti.html'), html, 'utf8');
+      html = withStattiOpenGraph(html, Array.isArray(b.items) ? b.items : loadItems(id));
+      writePage(path.join(PUBLIC_DIR, 'statti.html'), html);
       writeSitemap();
     }
     db.prepare(
@@ -450,7 +537,7 @@ router.post('/:id/publish', requireAuth, (req, res) => {
   const page = db.prepare('SELECT slug, html FROM pages WHERE id = ?').get(Number(req.params.id));
   if (!page?.html) return res.status(404).json({ error: 'Немає збереженого HTML' });
   const out = path.join(PUBLIC_DIR, `${page.slug}.html`);
-  fs.writeFileSync(out, page.html, 'utf8');
+  writePage(out, page.html);
   writeSitemap();
   res.json({ ok: true, slug: page.slug });
 });

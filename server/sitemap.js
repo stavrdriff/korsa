@@ -3,6 +3,13 @@ import path from 'node:path';
 import { PUBLIC_DIR, SITE_URL } from './config.js';
 import { esc } from './html.js';
 
+/** Записує сторінку лише якщо вміст змінився — інакше дата файлу (lastmod у sitemap) лишається старою */
+export function writePage(file, content) {
+  if (fs.existsSync(file) && fs.readFileSync(file, 'utf8') === content) return false;
+  fs.writeFileSync(file, content, 'utf8');
+  return true;
+}
+
 export function writeSitemap() {
   const names = fs
     .readdirSync(PUBLIC_DIR)
@@ -18,8 +25,8 @@ export function writeSitemap() {
     return `  <url><loc>${esc(loc)}</loc><lastmod>${modified}</lastmod></url>`;
   });
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
-  fs.writeFileSync(path.join(PUBLIC_DIR, 'sitemap.xml'), xml, 'utf8');
+  writePage(path.join(PUBLIC_DIR, 'sitemap.xml'), xml);
   const robots = `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`;
-  fs.writeFileSync(path.join(PUBLIC_DIR, 'robots.txt'), robots, 'utf8');
+  writePage(path.join(PUBLIC_DIR, 'robots.txt'), robots);
   return names.length;
 }
