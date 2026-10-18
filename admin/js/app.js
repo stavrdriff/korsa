@@ -101,8 +101,7 @@ function visibleProducts() {
   const q = document.getElementById('productSearch').value.trim().toLowerCase();
   return productCache.filter((p) => {
     if (categoryFilter && p.category_id !== categoryFilter.id) return false;
-    if (q && !`${p.title} ${p.slug}`.toLowerCase().includes(q)) return false;
-    return true;
+    return !q || `${p.title} ${p.slug}`.toLowerCase().includes(q);
   });
 }
 
@@ -247,7 +246,7 @@ async function openProductEdit(id, presetCategoryId = null) {
 
   if (id) {
     const p = await api(`/products/${id}`);
-    form.title.value = p.title;
+    form.elements.title.value = p.title;
     form.slug.value = p.slug;
     form.subtitle.value = p.subtitle || '';
     form.description.value = p.description || '';
@@ -383,6 +382,9 @@ document.getElementById('cancelProductBtn').addEventListener('click', () => {
   backToCategory();
 });
 
+/** Дозволені лише посилання на сторінки нашого сайту: «vikna.html», «statti.html#top» */
+const INTERNAL_HREF = /^[a-z0-9][a-z0-9._-]*\.html(#[\w-]+)?$/i;
+
 const DETAILS_TAGS = new Set(['H2', 'H3', 'H4', 'H5', 'H6', 'P', 'UL', 'OL', 'LI', 'STRONG', 'EM', 'B', 'I', 'BR', 'SPAN']);
 
 function colorValue(el) {
@@ -437,6 +439,19 @@ function cleanDetailsNode(node) {
       out.append(span);
       continue;
     }
+    if (tag === 'A') {
+      const href = (child.getAttribute('href') || '').trim();
+      const inner = cleanDetailsNode(child);
+      if (!INTERNAL_HREF.test(href)) {
+        out.append(...inner.childNodes);
+        continue;
+      }
+      const link = document.createElement('a');
+      link.setAttribute('href', href);
+      link.innerHTML = inner.innerHTML;
+      out.append(link);
+      continue;
+    }
     if (tag === 'DIV') {
       const block = document.createElement('p');
       block.innerHTML = cleanDetailsNode(child).innerHTML;
@@ -486,6 +501,7 @@ function mountPostRte(host, html) {
       </select>
       <button type="button" data-cmd="insertUnorderedList">Список</button>
       <button type="button" data-cmd="insertOrderedList">1. 2. 3.</button>
+      <button type="button" data-link title="Посилання на сторінку сайту">🔗 Посилання</button>
       <span class="rte__colors">
         <button type="button" class="rte__swatch rte__swatch--clear" data-color="" title="Звичайний">А</button>
         <button type="button" class="rte__swatch" data-color="#1e3a5f" style="--swatch:#1e3a5f" title="Синій"></button>
@@ -603,9 +619,117 @@ function bindRte(host) {
   const picker = host.querySelector('input[type="color"]');
   picker.addEventListener('mousedown', () => remember());
   picker.addEventListener('input', () => paint(picker.value));
+  const linkButton = host.querySelector('[data-link]');
+  if (linkButton) bindLinkPicker(host, linkButton, { remember, restore, current: () => range });
   body.addEventListener('mouseup', remember);
   body.addEventListener('keyup', remember);
   return () => cleanDetailsNode(body).innerHTML.replace(/<p>\s*<\/p>/g, '').trim();
+}
+
+let siteLinks = null;
+
+function loadSiteLinks() {
+  siteLinks ||= api('/pages/links').catch((err) => {
+    siteLinks = null;
+    throw err;
+  });
+  return siteLinks;
+}
+
+/** Кнопка «Посилання»: виділений текст стає лінком на обрану зі списку сторінку сайту */
+function bindLinkPicker(host, button, sel) {
+  const body = host.querySelector('.rte__body');
+  const panel = document.createElement('div');
+  panel.className = 'rte__links';
+  panel.hidden = true;
+  panel.innerHTML = `
+    <div class="rte__links-head">
+      <input type="search" placeholder="Пошук сторінки…" aria-label="Пошук сторінки">
+      <button type="button" data-unlink hidden>Прибрати посилання</button>
+      <button type="button" data-close aria-label="Закрити">✕</button>
+    </div>
+    <ul class="rte__links-list"></ul>
+  `;
+  host.querySelector('.rte__bar').after(panel);
+  const search = panel.querySelector('input');
+  const list = panel.querySelector('ul');
+  const unlink = panel.querySelector('[data-unlink]');
+  let pages = [];
+
+  const linkAtSelection = () => {
+    let node = sel.current()?.commonAncestorContainer;
+    while (node && node !== body) {
+      if (node.nodeName === 'A') return node;
+      node = node.parentNode;
+    }
+    return null;
+  };
+  const close = () => {
+    panel.hidden = true;
+  };
+  const paint = () => {
+    const q = search.value.trim().toLowerCase();
+    const found = pages.filter((p) => !q || p.title.toLowerCase().includes(q) || p.href.includes(q));
+    list.innerHTML = found.length
+      ? found
+          .map(
+            (p) =>
+              `<li><button type="button" data-href="${escapeAttr(p.href)}">${escapeHtml(p.title)}<small>${escapeHtml(p.href)}</small></button></li>`
+          )
+          .join('')
+      : '<li class="rte__links-empty">Нічого не знайдено</li>';
+  };
+
+  button.addEventListener('mousedown', (e) => {
+    sel.remember();
+    e.preventDefault();
+  });
+  button.addEventListener('click', async () => {
+    if (!panel.hidden) return close();
+    const existing = linkAtSelection();
+    if (!existing && (!sel.current() || sel.current().collapsed)) {
+      showFlash('Спочатку виділіть слова в тексті', false);
+      return;
+    }
+    unlink.hidden = !existing;
+    search.value = '';
+    panel.hidden = false;
+    list.innerHTML = '<li class="rte__links-empty">Завантаження…</li>';
+    search.focus();
+    try {
+      pages = await loadSiteLinks();
+      paint();
+    } catch (err) {
+      list.innerHTML = `<li class="rte__links-empty">${escapeHtml(err.message)}</li>`;
+    }
+  });
+  search.addEventListener('input', paint);
+  search.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') close();
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      list.querySelector('button[data-href]')?.click();
+    }
+  });
+  list.addEventListener('click', (e) => {
+    const pick = e.target.closest('button[data-href]');
+    if (!pick) return;
+    const existing = linkAtSelection();
+    if (existing && sel.current()?.collapsed) {
+      existing.setAttribute('href', pick.dataset.href);
+    } else {
+      sel.restore();
+      document.execCommand('createLink', false, pick.dataset.href);
+    }
+    sel.remember();
+    close();
+  });
+  unlink.addEventListener('click', () => {
+    const existing = linkAtSelection();
+    if (existing) existing.replaceWith(...existing.childNodes);
+    close();
+  });
+  panel.querySelector('[data-close]').addEventListener('click', close);
 }
 
 const readDetailsBody = bindRte(document.querySelector('#productForm .rte'));
@@ -627,7 +751,7 @@ document.getElementById('productForm').addEventListener('submit', async (e) => {
     .filter((s) => s.label && s.value);
 
   const body = {
-    title: form.title.value.trim(),
+    title: form.elements.title.value.trim(),
     slug: form.slug.value.trim() || undefined,
     subtitle: form.subtitle.value.trim(),
     description: form.description.value.trim(),
@@ -1407,7 +1531,7 @@ async function openPageEdit(id) {
   const page = await api(`/pages/${id}`);
   const form = document.getElementById('pageForm');
   form.dataset.id = String(page.id);
-  form.title.value = page.title || '';
+  form.elements.title.value = page.title || '';
   form.eyebrow.value = page.eyebrow || '';
   form.lead.value = page.lead || '';
   form.parent_link.value = page.parent_link || '';
@@ -1559,7 +1683,7 @@ document.getElementById('pageForm').addEventListener('submit', async (e) => {
     const saved = await api(`/pages/${form.dataset.id}`, {
       method: 'PUT',
       body: {
-        title: form.title.value.trim(),
+        title: form.elements.title.value.trim(),
         eyebrow: form.eyebrow.value.trim(),
         lead: form.lead.value.trim(),
         parent_link: form.parent_link.value.trim(),
@@ -1818,7 +1942,7 @@ async function loadPosts() {
   const page = await api(`/pages/${brief.id}`);
   postsPageId = page.id;
   const form = document.getElementById('postsForm');
-  form.title.value = page.title || '';
+  form.elements.title.value = page.title || '';
   form.lead.value = page.lead || '';
   paintPosts(page);
 }
@@ -1842,7 +1966,7 @@ async function persistPosts() {
   return api(`/pages/${postsPageId}`, {
     method: 'PUT',
     body: {
-      title: form.title.value.trim(),
+      title: form.elements.title.value.trim(),
       lead: form.lead.value.trim(),
       items: collectPosts(),
     },

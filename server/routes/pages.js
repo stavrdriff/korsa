@@ -484,6 +484,21 @@ router.get('/', (_req, res) => {
   res.json(rows);
 });
 
+/** Список опублікованих сторінок сайту — для вставки внутрішніх посилань у текст статті */
+router.get('/links', (_req, res) => {
+  const links = fs
+    .readdirSync(PUBLIC_DIR)
+    .filter((name) => name.endsWith('.html'))
+    .map((name) => {
+      const html = fs.readFileSync(path.join(PUBLIC_DIR, name), 'utf8');
+      const raw = html.match(/<title>([\s\S]*?)<\/title>/i)?.[1] || '';
+      const title = decode(raw).replace(/\s*\|\s*Корса\s*$/i, '').trim() || name;
+      return { href: name, title };
+    })
+    .sort((a, b) => a.title.localeCompare(b.title, 'uk'));
+  res.json(links);
+});
+
 router.get('/:id', (req, res) => {
   const page = loadPage(Number(req.params.id));
   if (!page) return res.status(404).json({ error: 'Not found' });
