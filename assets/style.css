@@ -324,18 +324,18 @@ h3,h4{color:var(--text)}
 .post-html li{margin:0 0 6px;font-size:17px;line-height:1.65}
 .post-html a{color:#2d5a8e;text-decoration:underline;text-underline-offset:2px}
 .post-html a:hover{color:#1e3a5f}
-.cat{position:relative;display:block;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:0;overflow:hidden;transition:transform var(--t),border-color var(--t),box-shadow var(--t);box-shadow:0 1px 3px rgba(30,58,95,.04);color:var(--text)}
+.cat{position:relative;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:0;overflow:hidden;transition:transform var(--t),border-color var(--t),box-shadow var(--t);box-shadow:0 1px 3px rgba(30,58,95,.04);color:var(--text)}
 .cat:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:var(--shadow-lg);color:var(--text)}
 .cat__media{aspect-ratio:16/10;width:100%;background:linear-gradient(135deg,var(--surface-2),#fff);overflow:hidden;position:relative;display:grid;place-items:center;border-bottom:1px solid var(--line)}
 .cat__media img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
 .cat:hover .cat__media img{transform:scale(1.06)}
 .cat__media svg{width:60%;height:auto}
 .cat__media::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(255,255,255,.4) 100%);pointer-events:none}
-.cat__body{padding:22px 24px 24px}
+.cat__body{padding:22px 24px 24px;flex:1;display:flex;flex-direction:column}
 .cat__icon{display:none}
 .cat h3{margin:0 0 8px;font-size:20px}
 .cat p{color:var(--muted);margin:0 0 18px;font-size:14px}
-.cat__meta{display:flex;justify-content:space-between;align-items:center;color:var(--accent);font-size:13px;font-weight:600}
+.cat__meta{margin-top:auto;display:flex;justify-content:space-between;align-items:center;color:var(--accent);font-size:13px;font-weight:600}
 .cat__arrow{transition:transform var(--t)}
 .cat:hover .cat__arrow{transform:translateX(4px)}
 
