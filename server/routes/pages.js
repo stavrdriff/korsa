@@ -488,10 +488,12 @@ router.get('/', (_req, res) => {
 router.get('/links', (_req, res) => {
   // Батьківська сторінка й порядок беремо з CMS, щоб адмінка показала список деревом
   const meta = new Map();
-  for (const table of ['pages', 'products']) {
-    for (const row of db.prepare(`SELECT slug, parent_link, sort_order FROM ${table}`).all()) {
-      meta.set(`${row.slug}.html`, { parent: row.parent_link || '', order: row.sort_order || 0 });
-    }
+  const rows = [
+    ...db.prepare('SELECT slug, parent_link, sort_order FROM pages').all(),
+    ...db.prepare('SELECT slug, parent_link, sort_order FROM products').all(),
+  ];
+  for (const row of rows) {
+    meta.set(`${row.slug}.html`, { parent: row.parent_link || '', order: row.sort_order || 0 });
   }
   const links = fs
     .readdirSync(PUBLIC_DIR)
