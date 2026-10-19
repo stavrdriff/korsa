@@ -669,12 +669,42 @@ function bindLinkPicker(host, button, sel) {
   };
   const paint = () => {
     const q = search.value.trim().toLowerCase();
-    const found = pages.filter((p) => !q || p.title.toLowerCase().includes(q) || p.href.includes(q));
+    const byHref = new Map(pages.map((p) => [p.href, p]));
+    const kids = new Map();
+    for (const p of pages) {
+      const parent = byHref.has(p.parent) && p.parent !== p.href ? p.parent : '';
+      if (!kids.has(parent)) kids.set(parent, []);
+      kids.get(parent).push(p);
+    }
+    for (const group of kids.values()) {
+      group.sort((a, b) => a.order - b.order || a.title.localeCompare(b.title, 'uk'));
+    }
+    const matches = (p) => p.title.toLowerCase().includes(q) || p.href.includes(q);
+    const rows = [];
+    // Обхід дерева: при пошуку лишаємо збіги разом з їхніми категоріями, щоб було видно, де сторінка
+    const walk = (parent, depth, seen) => {
+      let any = false;
+      for (const p of kids.get(parent) || []) {
+        if (seen.has(p.href)) continue;
+        seen.add(p.href);
+        const at = rows.length;
+        const hit = !q || matches(p);
+        rows.push(null);
+        const childHit = walk(p.href, depth + 1, seen);
+        if (hit || childHit) {
+          rows[at] = { p, depth, group: kids.has(p.href), dim: !hit };
+          any = true;
+        }
+      }
+      return any;
+    };
+    walk('', 0, new Set());
+    const found = rows.filter(Boolean);
     list.innerHTML = found.length
       ? found
           .map(
-            (p) =>
-              `<li><button type="button" data-href="${escapeAttr(p.href)}">${escapeHtml(p.title)}<small>${escapeHtml(p.href)}</small></button></li>`
+            ({ p, depth, group, dim }) =>
+              `<li style="--depth:${depth}"${group ? ' class="is-group"' : ''}${dim ? ' data-dim' : ''}><button type="button" data-href="${escapeAttr(p.href)}">${escapeHtml(p.title)}<small>${escapeHtml(p.href)}</small></button></li>`
           )
           .join('')
       : '<li class="rte__links-empty">Нічого не знайдено</li>';

@@ -486,6 +486,13 @@ router.get('/', (_req, res) => {
 
 /** Список опублікованих сторінок сайту — для вставки внутрішніх посилань у текст статті */
 router.get('/links', (_req, res) => {
+  // Батьківська сторінка й порядок беремо з CMS, щоб адмінка показала список деревом
+  const meta = new Map();
+  for (const table of ['pages', 'products']) {
+    for (const row of db.prepare(`SELECT slug, parent_link, sort_order FROM ${table}`).all()) {
+      meta.set(`${row.slug}.html`, { parent: row.parent_link || '', order: row.sort_order || 0 });
+    }
+  }
   const links = fs
     .readdirSync(PUBLIC_DIR)
     .filter((name) => name.endsWith('.html'))
@@ -493,7 +500,9 @@ router.get('/links', (_req, res) => {
       const html = fs.readFileSync(path.join(PUBLIC_DIR, name), 'utf8');
       const raw = html.match(/<title>([\s\S]*?)<\/title>/i)?.[1] || '';
       const title = decode(raw).replace(/\s*\|\s*Корса\s*$/i, '').trim() || name;
-      return { href: name, title };
+      const known = meta.get(name);
+      const parent = known?.parent || (name.startsWith('stattia-') ? 'statti.html' : name === 'index.html' ? '' : 'index.html');
+      return { href: name, title, parent, order: known?.order ?? 0 };
     })
     .sort((a, b) => a.title.localeCompare(b.title, 'uk'));
   res.json(links);

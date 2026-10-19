@@ -496,6 +496,13 @@ textarea { min-height: 90px; resize: vertical; }
 }
 .rte__links-list button:hover { background: #eaf0f8; }
 .rte__links-list small { color: var(--muted); font-size: 12px; }
+.rte__links-list li { --depth: 0; padding-left: calc(var(--depth) * 18px); }
+.rte__links-list li + li[style*="--depth:0"],
+.rte__links-list li + li[style*="--depth:1"].is-group { margin-top: 4px; }
+.rte__links-list li:not([style*="--depth:0"]) button { border-left: 2px solid var(--line); border-radius: 0 6px 6px 0; }
+.rte__links-list .is-group > button { font-weight: 600; color: #1e3a5f; }
+.rte__links-list [data-dim] > button { opacity: .6; }
+.rte__links-list { max-height: 360px; }
 .rte__links-empty { padding: 6px 10px; color: var(--muted); font-size: 13px; }
 .rte__body p { margin: 0 0 8px; }
 .rte__body ul, .rte__body ol { margin: 0 0 10px; padding-left: 22px; }
