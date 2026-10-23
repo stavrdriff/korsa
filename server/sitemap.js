@@ -27,8 +27,25 @@ function sitemapDates() {
   return dates;
 }
 
+/** Фавіконки й маніфест — однакові для всіх сторінок, файли лежать у public/ */
+const ICON_TAGS = `<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#1e3a5f">
+`;
+
+const ICON_LINE_RE = /^<(?:link rel="(?:icon|apple-touch-icon|manifest)"|meta name="theme-color")[^>]*>\n/gm;
+
+/** Ставить актуальні ICON_TAGS у <head>, прибираючи попередню версію цих тегів */
+function withIcons(html) {
+  if (!html.includes('</head>')) return html;
+  return html.replace(ICON_LINE_RE, '').replace('</head>', `${ICON_TAGS}</head>`);
+}
+
 /** Записує сторінку лише якщо вміст змінився — інакше дата файлу (lastmod у sitemap) лишається старою */
 export function writePage(file, content) {
+  if (file.endsWith('.html')) content = withIcons(content);
   if (fs.existsSync(file) && fs.readFileSync(file, 'utf8') === content) return false;
   fs.writeFileSync(file, content, 'utf8');
   return true;

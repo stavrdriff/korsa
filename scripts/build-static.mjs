@@ -63,8 +63,10 @@ for (const name of htmlFiles) {
   const html = fs.readFileSync(path.join(PUBLIC_DIR, name), 'utf8');
   fs.writeFileSync(path.join(DIST, name), rewriteRefs(html, refs), 'utf8');
 }
-for (const name of ['sitemap.xml', 'robots.txt']) {
-  if (fs.existsSync(path.join(PUBLIC_DIR, name))) copyFile(path.join(PUBLIC_DIR, name), name);
+// sitemap, robots, фавіконки й маніфест — усе, що лежить у public/ поруч зі сторінками
+for (const name of fs.readdirSync(PUBLIC_DIR)) {
+  const from = path.join(PUBLIC_DIR, name);
+  if (!name.endsWith('.html') && fs.statSync(from).isFile()) copyFile(from, name);
 }
 
 // Стилі та скрипт копіюємо цілком; посилання з CSS рахуються від папки assets/
