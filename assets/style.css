@@ -233,7 +233,7 @@ section{padding:72px 24px;border-bottom:1px solid var(--line);position:relative}
 section.section--alt{background:linear-gradient(180deg,var(--bg-2),var(--bg))}
 .section__inner{max-width:var(--max);margin:0 auto;position:relative;z-index:1}
 .eyebrow{display:inline-block;padding:5px 12px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:14px}
-h2{font-size:clamp(24px,3vw,34px);margin:0 0 12px;letter-spacing:-.3px;color:var(--text)}
+h1,h2{font-size:clamp(24px,3vw,34px);margin:0 0 12px;letter-spacing:-.3px;color:var(--text)}
 h3,h4{color:var(--text)}
 .section__lead{color:var(--text-2);max-width:680px;margin:0 0 36px;font-size:16px}
 .section--blueprint{position:relative;overflow:hidden}
@@ -301,7 +301,7 @@ h3,h4{color:var(--text)}
 .cats>article{display:flex;min-width:0}
 .cats>article>.cat{flex:1}
 .post-read{max-width:760px}
-.post-read h2{margin-bottom:8px}
+.post-read h1{margin-bottom:8px}
 .post-date{color:var(--muted);margin:0 0 22px;font-size:14px}
 .post-cover{width:100%;border-radius:12px;margin:0 0 22px;display:block}
 .post-gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 22px}

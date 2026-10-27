@@ -162,13 +162,30 @@ const CYR = {
   'ь': '', 'ю': 'yu', 'я': 'ya', 'ы': 'y', 'э': 'e', 'ъ': '', 'ё': 'yo',
 };
 
+// Службові слова, які не несуть змісту в адресі статті
+const SLUG_STOP_WORDS = new Set(
+  `і й та а але чи або що як який яка яке які це ще не ні же б би в у на з із зі до за від для при по про
+   через над під між без чому навіщо коли де саме ваш ваша ваше ваші вашого вашої вас вам ми ви ви він вона
+   воно вони його її їх свій своє своїх можна треба дізнайтеся хочете`.split(/\s+/)
+);
+const SLUG_MAX_WORDS = 4;
+const SLUG_MAX_LENGTH = 40;
+
+/** Коротка адреса статті: перше речення заголовка, 2–4 змістовні слова, до 40 символів */
 function makeSlug(title, used) {
-  const mapped = String(title || '')
-    .toLowerCase()
-    .split('')
-    .map((ch) => CYR[ch] ?? ch)
-    .join('');
-  const base = (mapped.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'material').slice(0, 60);
+  const sentence = String(title || '').toLowerCase().split(/[.?!:;]/)[0];
+  const words = sentence
+    .split(/[^a-zа-яіїєґ0-9']+/)
+    .filter((word) => word && !SLUG_STOP_WORDS.has(word))
+    .map((word) => [...word].map((ch) => CYR[ch] ?? ch).join('').replace(/[^a-z0-9]/g, ''))
+    .filter(Boolean);
+  let base = '';
+  for (const word of words.slice(0, SLUG_MAX_WORDS)) {
+    const next = base ? `${base}-${word}` : word;
+    if (base && next.length > SLUG_MAX_LENGTH) break;
+    base = next.slice(0, SLUG_MAX_LENGTH);
+  }
+  base ||= 'material';
   let slug = base;
   let n = 2;
   while (used.has(slug)) slug = `${base}-${n++}`;
@@ -317,7 +334,7 @@ ${header}
 <section class="section--blueprint section--photo-bg bg--pano">
   <div class="section__inner post-read">
     <div class="crumb"><a href="index.html">Головна</a> / <a href="statti.html">Корисні статті та відео</a> / ${esc(item.title || 'Стаття')}</div>
-    <h2>${esc(item.title || '')}</h2>
+    <h1>${esc(item.title || '')}</h1>
     ${added ? `<p class="post-date"><time datetime="${esc(String(item.created_at).slice(0, 10))}">${esc(added)}</time></p>` : ''}
     <article>
       ${gallery ? `<div class="post-gallery">\n${gallery}\n</div>` : ''}
@@ -425,7 +442,9 @@ function patchHtml(html, prev, next) {
     }
   }
   if (next.title && next.title !== prev.title) {
-    out = out.replace(/(<h2[^>]*>)[\s\S]*?(<\/h2>)/i, `$1${esc(next.title)}$2`);
+    // На головній H1 — це гасло в hero, а назва сторінки стоїть у першому H2
+    const tag = prev.slug === 'index' ? 'h2' : 'h1';
+    out = out.replace(new RegExp(`(<${tag}[^>]*>)[\\s\\S]*?(</${tag}>)`, 'i'), `$1${esc(next.title)}$2`);
   }
   if (next.eyebrow != null && next.eyebrow !== prev.eyebrow && next.eyebrow !== '') {
     out = out.replace(/(<span class="eyebrow">)[\s\S]*?(<\/span>)/i, `$1${esc(next.eyebrow)}$2`);

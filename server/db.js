@@ -91,6 +91,14 @@ addColumn('pages', 'parent_label', "TEXT DEFAULT ''");
 addColumn('pages', 'html', "TEXT DEFAULT ''");
 addColumn('pages', 'sort_order', 'INTEGER DEFAULT 0');
 
+// Назва розділу була першим H2 — для пошуковиків це має бути H1 (по одному на сторінку)
+for (const page of db.prepare(`SELECT id, html FROM pages WHERE html LIKE '%<h2%'`).all()) {
+  const source = String(page.html);
+  if (/<h1\b/i.test(source)) continue;
+  const html = source.replace(/<h2(\b[^>]*)>([\s\S]*?)<\/h2>/i, '<h1$1>$2</h1>');
+  db.prepare('UPDATE pages SET html = ? WHERE id = ?').run(html, page.id);
+}
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS page_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

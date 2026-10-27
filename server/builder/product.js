@@ -92,7 +92,7 @@ ${headerHtml()}
     <div class="crumb"><a href="index.html">Головна</a> / <a href="catalog.html">Каталог</a> / <a href="${esc(parentLink)}">${esc(parentLabel)}</a> / ${esc(product.title)}</div>
     <a href="${esc(parentLink)}" style="display:inline-flex;align-items:center;gap:6px;color:var(--accent);text-decoration:none;font-size:13.5px;margin-bottom:14px;font-weight:500">← Назад до ${esc(parentLabel)}</a>
 
-    <h2 style="margin:8px 0 4px;font-size:26px">${esc(product.title)}${badge}</h2>
+    <h1 style="margin:8px 0 4px;font-size:26px">${esc(product.title)}${badge}</h1>
     <p style="margin:0 0 18px;color:var(--muted);font-size:13.5px">${esc(product.subtitle)}</p>
 
     <div class="product-page">
