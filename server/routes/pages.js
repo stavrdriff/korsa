@@ -368,6 +368,7 @@ ${openGraphTags(item, lead)}
 </head>
 <body class="has-photo-bg bg-pano">
 ${header}
+<main>
 <section class="section--blueprint section--photo-bg bg--pano">
   <div class="section__inner post-read">
     <div class="crumb"><a href="index.html">Головна</a> / <a href="statti.html">Корисні статті та відео</a> / ${esc(item.title || 'Стаття')}</div>
@@ -380,6 +381,7 @@ ${header}
     </article>
   </div>
 </section>
+</main>
 ${footer}
 <script src="assets/script.js"></script>
 </body>
@@ -462,7 +464,7 @@ function renderStattiPosts(html, items, pageNo = 1) {
     <a class="cat" href="${esc(href)}">
       <div class="cat__media">${media}</div>
       <div class="cat__body">
-        <h3>${esc(item.title || '')}</h3>
+        <h2 class="h3">${esc(item.title || '')}</h2>
         <p>${esc(cardExcerpt(item))}</p>
         <div class="cat__meta"><span>${when}${when ? ' · ' : ''}${label}</span><span class="cat__arrow">→</span></div>
       </div>

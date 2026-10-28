@@ -8,7 +8,7 @@
   --line-2: #d8d4c4;
   --text: #1a1f2e;
   --text-2: #374151;
-  --muted: #6b7280;
+  --muted: #636b78;
   --accent: #1e3a5f;
   --accent-2: #c9a14a;
   --accent-3: #3d5a87;
@@ -733,15 +733,26 @@ section.section--alt {
   margin-bottom: 14px;
 }
 h1,
-h2 {
+h2:where(:not(.h3)) {
   font-size: clamp(24px, 3vw, 34px);
   margin: 0 0 12px;
   letter-spacing: -0.3px;
   color: var(--text);
 }
 h3,
-h4 {
+h4,
+h2:where(.h3) {
   color: var(--text);
+}
+/* Заголовок, піднятий на рівень для правильної структури (H3 → h2.h3, H4 → h3.h4),
+   виглядає як раніше: розміри й відступи браузера для старого тегу */
+h2:where(.h3) {
+  font-size: 1.17em;
+  margin-block: 1em;
+}
+h3:where(.h4) {
+  font-size: 1em;
+  margin-block: 1.33em;
 }
 .section__lead {
   color: var(--text-2);
@@ -1117,6 +1128,28 @@ h4 {
 .cat:hover .cat__media img {
   transform: scale(1.06);
 }
+/* Кілька фото в одній картці: сітка 2×2 або два фото з діагональним розділом */
+.cat__media--grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+  place-items: stretch;
+}
+.cat__media--split img {
+  position: absolute;
+  inset: 0;
+}
+.cat__media--split img:first-child {
+  clip-path: polygon(0 0, 60% 0, 40% 100%, 0 100%);
+}
+.cat__media--split img:last-child {
+  clip-path: polygon(60% 0, 100% 0, 100% 100%, 40% 100%);
+}
+/* Колаж не збільшується при наведенні — інакше фото налазять одне на одне */
+.cat:hover .cat__media--grid img,
+.cat:hover .cat__media--split img {
+  transform: none;
+}
 .cat__media svg {
   width: 60%;
   height: auto;
@@ -1141,7 +1174,8 @@ h4 {
 .cat__icon {
   display: none;
 }
-.cat h3 {
+.cat h3,
+.cat h2:where(.h3) {
   margin: 0 0 8px;
   font-size: 20px;
 }
@@ -1248,12 +1282,14 @@ h4 {
   border-bottom: 2px solid var(--line);
   padding-bottom: 14px;
 }
-.collection__head h3 {
+.collection__head h3,
+.collection__head h2:where(.h3) {
   margin: 0;
   font-size: 22px;
   color: var(--text);
 }
-.collection__head h3 small {
+.collection__head h3 small,
+.collection__head h2:where(.h3) small {
   color: var(--muted);
   font-weight: 400;
   font-size: 13px;
@@ -1472,7 +1508,8 @@ img.product__img {
   font-size: 20px;
   margin-bottom: 12px;
 }
-.feature h4 {
+.feature h3,
+.feature h2:where(.h3) {
   margin: 0 0 6px;
   font-size: 16px;
 }
@@ -1512,7 +1549,8 @@ img.product__img {
   position: relative;
   z-index: 1;
 }
-.cta-band h3 {
+.cta-band h3,
+.cta-band h2:where(.h3) {
   margin: 0 0 6px;
   color: #fff;
 }
@@ -1562,14 +1600,15 @@ img.product__img {
   box-shadow: var(--shadow);
   color: #fff;
 }
+/* Фірмові кольори трохи темніші — щоб білий текст мав контраст ≥ 4.5 */
 .msgr--viber {
-  background: #7360f2;
+  background: #715eed;
 }
 .msgr--telegram {
-  background: #229ed9;
+  background: #1b7ba9;
 }
 .msgr--whatsapp {
-  background: #25d366;
+  background: #178540;
 }
 .msgr--phone {
   background: var(--accent);
@@ -1604,7 +1643,7 @@ body > * {
   grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 32px;
 }
-.footer h5 {
+.footer h2 {
   color: var(--text);
   font-size: 14px;
   margin: 0 0 12px;

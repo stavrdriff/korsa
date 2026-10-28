@@ -86,6 +86,7 @@ ${PRODUCT_PAGE_CSS}
 </head>
 <body class="has-photo-bg bg-tiles bg-pos-win">
 ${headerHtml()}
+<main>
 
 <section class="section--blueprint section--photo-bg bg--tiles-win">
   <div class="section__inner">
@@ -108,10 +109,10 @@ ${headerHtml()}
           <a href="${esc(parentLink)}">↩ Усі моделі</a>
         </div>
 
-        <h3 style="margin:18px 0 8px;color:#1e3a5f;font-size:17px">Опис</h3>
+        <h2 style="margin:18px 0 8px;color:#1e3a5f;font-size:17px;letter-spacing:0">Опис</h2>
         <p class="pp-desc">${esc(product.description)}</p>
 
-        <h3 style="margin:24px 0 10px;color:#1e3a5f;font-size:17px">Характеристики</h3>
+        <h2 style="margin:24px 0 10px;color:#1e3a5f;font-size:17px;letter-spacing:0">Характеристики</h2>
         <table class="pp-table">
           ${specsRows}
         </table>
@@ -132,6 +133,7 @@ ${headerHtml()}
   </div>
 </section>
 
+</main>
 ${footerHtml()}
 <script src="assets/script.js"></script>
 </body>

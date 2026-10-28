@@ -11,7 +11,7 @@
   @media (max-width:680px){.motor-card{grid-template-columns:1fr}}
   .motor-photo{width:160px;height:160px;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#fafaf7;display:flex;align-items:center;justify-content:center}
   .motor-photo img{width:100%;height:100%;object-fit:contain;padding:8px}
-  .motor-content h3{margin:0 0 8px;color:#1e3a5f;font-size:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .motor-content h3,.motor-content h2:where(.h3){margin:0 0 8px;color:#1e3a5f;font-size:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .motor-content p{margin:0 0 10px;font-size:14px;color:#444;line-height:1.55}
   .motor-specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:10px}
   .motor-spec{padding:8px 12px;background:#f4f7fc;border-radius:8px;font-size:12.5px;color:#1e3a5f;border-left:3px solid var(--accent)}
@@ -46,6 +46,7 @@
     </nav>
   </div>
 </header>
+<main>
 
 <section class="section--blueprint section--photo-bg bg--tiles-rolet">
   <div class="section__inner">
@@ -58,7 +59,7 @@
 
     <!-- Підказка-табличка вибору -->
     <div style="background:white;border:1px solid var(--line);border-radius:12px;padding:20px;margin:26px 0">
-      <h3 style="margin:0 0 12px;color:#1e3a5f;font-size:17px">Як обрати двигун?</h3>
+      <h2 class="h3" style="margin:0 0 12px;color:#1e3a5f;font-size:17px">Як обрати двигун?</h2>
       <p style="margin:0 0 12px;font-size:14px;color:#444">Двигун обирають за <strong>максимальною площею</strong> системи, для якої він підходить. Чим більше тканини на валу — тим потужніший двигун потрібен.</p>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;font-size:13px">
         <div style="padding:10px;background:#f4f7fc;border-radius:8px"><strong style="color:var(--accent)">До 6 м²</strong><br>Sunny 35-10/17</div>
@@ -74,7 +75,7 @@
     <div class="motor-card">
       <div class="motor-photo"><img src="https://sunny-tm.com/image/cache/catalog/Motors/outdoor/35-10-17-Promo-800x800.jpg" alt="Sunny 35-10/17" loading="lazy" referrerpolicy="no-referrer"></div>
       <div class="motor-content">
-        <h3>Sunny 35-10/17 <span class="badge-power">220 V · 10 Nm</span></h3>
+        <h2 class="h3">Sunny 35-10/17 <span class="badge-power">220 V · 10 Nm</span></h2>
         <p>Бюджетний компактний двигун для невеликих систем. Потужність 139 W, швидкість 17 об/хв, крутний момент 10 Nm. 4 версії: S (вимикач), R (вбудований радіо), Е (електронні кінцеві положення), EW (Wi-Fi).</p>
         <div class="systems-tags">
           <span>Refleksol до 6 м²</span>
@@ -93,7 +94,7 @@
     <div class="motor-card">
       <div class="motor-photo"><img src="https://sunny-tm.com/image/cache/catalog/Motors/outdoor/45-20-15-Promo-800x800.jpg" alt="Sunny 45-20/15" loading="lazy" referrerpolicy="no-referrer"></div>
       <div class="motor-content">
-        <h3>Sunny 45-20/15 <span class="badge-power">220 V · 20 Nm</span> <span style="background:#1e3a5f;color:white;padding:3px 10px;border-radius:5px;font-size:11.5px;font-weight:600">універсал</span></h3>
+        <h2 class="h3">Sunny 45-20/15 <span class="badge-power">220 V · 20 Nm</span> <span style="background:#1e3a5f;color:white;padding:3px 10px;border-radius:5px;font-size:11.5px;font-weight:600">універсал</span></h2>
         <p>Універсальний двигун середньої потужності — крутний момент 20 Nm. Підходить для всіх типів систем — Refleksol, ZIP, маркіз. Найпопулярніший вибір для приватних будинків.</p>
         <div class="systems-tags">
           <span>Refleksol до 12 м²</span>
@@ -114,7 +115,7 @@
     <div class="motor-card">
       <div class="motor-photo"><img src="https://sunny-tm.com/image/cache/catalog/Motors/outdoor/45-30-15-Promo-800x800.jpg" alt="Sunny 45-30/15" loading="lazy" referrerpolicy="no-referrer"></div>
       <div class="motor-content">
-        <h3>Sunny 45-30/15 <span class="badge-power">220 V · 30 Nm</span> <span style="background:var(--accent);color:white;padding:3px 10px;border-radius:5px;font-size:11.5px;font-weight:600">потужний</span></h3>
+        <h2 class="h3">Sunny 45-30/15 <span class="badge-power">220 V · 30 Nm</span> <span style="background:var(--accent);color:white;padding:3px 10px;border-radius:5px;font-size:11.5px;font-weight:600">потужний</span></h2>
         <p>Підвищеної потужності — для великих Refleksol та ZIP. Підходить для більшості готельних та ресторанних установок з великими тканинами.</p>
         <div class="systems-tags">
           <span>Refleksol до 22 м²</span>
@@ -135,7 +136,7 @@
     <div class="motor-card">
       <div class="motor-photo"><img src="https://sunny-tm.com/image/cache/catalog/Motors/outdoor/45-40-15-Promo-800x800.jpg" alt="Sunny S45-40/15" loading="lazy" referrerpolicy="no-referrer"></div>
       <div class="motor-content">
-        <h3>Sunny S45-40/15 <span class="badge-power">220 V · 40 Nm</span> <span style="background:#5a8bb5;color:white;padding:3px 10px;border-radius:5px;font-size:11.5px;font-weight:600">для маркіз</span></h3>
+        <h2 class="h3">Sunny S45-40/15 <span class="badge-power">220 V · 40 Nm</span> <span style="background:#5a8bb5;color:white;padding:3px 10px;border-radius:5px;font-size:11.5px;font-weight:600">для маркіз</span></h2>
         <p>Спеціалізований двигун для великих маркіз Smart та Elegance. Підтримує управління <strong>пультом або перемикачем</strong> на стіні.</p>
         <div class="systems-tags">
           <span>Маркізи до 17,5 м²</span>
@@ -153,7 +154,7 @@
     <div class="motor-card">
       <div class="motor-photo"><img src="https://sunny-tm.com/image/cache/catalog/Motors/outdoor/45-50-12-Promo-800x800.jpg" alt="Sunny S45-50/12" loading="lazy" referrerpolicy="no-referrer"></div>
       <div class="motor-content">
-        <h3>Sunny S45-50/12 <span class="badge-power">220 V · 50 Nm</span> <span style="background:#5a8bb5;color:white;padding:3px 10px;border-radius:5px;font-size:11.5px;font-weight:600">для маркіз</span></h3>
+        <h2 class="h3">Sunny S45-50/12 <span class="badge-power">220 V · 50 Nm</span> <span style="background:#5a8bb5;color:white;padding:3px 10px;border-radius:5px;font-size:11.5px;font-weight:600">для маркіз</span></h2>
         <p>Альтернатива S45-40 з більшим крутним моментом (50 Nm). Також для маркіз Smart та Elegance до 17,5 м². Пульт або стіновий перемикач.</p>
         <div class="systems-tags">
           <span>Маркізи до 17,5 м²</span>
@@ -171,7 +172,7 @@
     <div class="motor-card">
       <div class="motor-photo"><img src="https://sunny-tm.com/image/cache/catalog/Motors/outdoor/45-60-8-Promo-800x800.jpg" alt="Sunny S45-60/8" loading="lazy" referrerpolicy="no-referrer"></div>
       <div class="motor-content">
-        <h3>Sunny S45-60/8 <span class="badge-power">220 V · 60 Nm</span> <span style="background:var(--accent);color:white;padding:3px 10px;border-radius:5px;font-size:11.5px;font-weight:600">великий формат</span></h3>
+        <h2 class="h3">Sunny S45-60/8 <span class="badge-power">220 V · 60 Nm</span> <span style="background:var(--accent);color:white;padding:3px 10px;border-radius:5px;font-size:11.5px;font-weight:600">великий формат</span></h2>
         <p>Потужний двигун для великих маркіз — до 28 м². Стандарт для топ-ресторанів, готелів, банкетних залів з великими літніми терасами.</p>
         <div class="systems-tags">
           <span>Маркізи до 28 м²</span>
@@ -189,7 +190,7 @@
     <div class="motor-card">
       <div class="motor-photo"><img src="https://sunny-tm.com/image/cache/catalog/Motors/outdoor/59-60-15-Promo-800x800.jpg" alt="Sunny 59-60/15" loading="lazy" referrerpolicy="no-referrer"></div>
       <div class="motor-content">
-        <h3>Sunny 59-60/15 <span class="badge-power">220 V · 60 Nm</span> <span style="background:linear-gradient(135deg,#c9a14a,#b8860b);color:white;padding:3px 10px;border-radius:5px;font-size:11.5px;font-weight:600">флагман</span></h3>
+        <h2 class="h3">Sunny 59-60/15 <span class="badge-power">220 V · 60 Nm</span> <span style="background:linear-gradient(135deg,#c9a14a,#b8860b);color:white;padding:3px 10px;border-radius:5px;font-size:11.5px;font-weight:600">флагман</span></h2>
         <p>Топ-модель потужності для максимальних розмірів. <strong>Refleksol до 30 м²</strong> або маркізи Wintent Eco до 28 м². Великі фасадні системи комерційних об'єктів.</p>
         <div class="systems-tags">
           <span>Refleksol до 30 м²</span>
@@ -208,7 +209,7 @@
     <div class="sensor-card">
       <div class="motor-photo" style="width:160px;height:160px"><img src="https://sunny-tm.com/image/cache/catalog/DatchikPromo-800x800-2024-800x800.jpg" alt="Датчик дощу, сонця і вітру" loading="lazy" referrerpolicy="no-referrer"></div>
       <div>
-        <h3 style="margin:0 0 8px;color:#1e3a5f;font-size:20px">Датчик дощу, сонця і вітру <span style="background:#1e3a5f;color:white;padding:3px 10px;border-radius:5px;font-size:11.5px;font-weight:600">розумний дім</span></h3>
+        <h2 class="h3" style="margin:0 0 8px;color:#1e3a5f;font-size:20px">Датчик дощу, сонця і вітру <span style="background:#1e3a5f;color:white;padding:3px 10px;border-radius:5px;font-size:11.5px;font-weight:600">розумний дім</span></h2>
         <p style="margin:0 0 10px;font-size:14.5px;color:#444;line-height:1.55">Універсальний датчик для <strong>усіх систем</strong> зовнішнього сонцезахисту. Реагує на зміни погодних умов — сонце, вітер, дощ. Працює від сонячної батареї або 220 V.</p>
         <ul style="margin:0 0 12px;padding-left:20px;font-size:14px;color:#444;line-height:1.6">
           <li><strong>Сонце</strong> — опускає Refleksol/ZIP або відкриває маркізу</li>
@@ -229,7 +230,7 @@
 
     <!-- Комплектація (пульти) -->
     <div style="margin-top:36px">
-      <h3 style="margin:0 0 6px;color:#1e3a5f;font-size:20px">Комплектація — пульти та вимикачі</h3>
+      <h2 class="h3" style="margin:0 0 6px;color:#1e3a5f;font-size:20px">Комплектація — пульти та вимикачі</h2>
       <p style="margin:0 0 14px;font-size:14px;color:#444">Стандартний комплект: внутрішньовальний електродвигун + пульт-передавач (або стіновий вимикач). Для серії EW — додатково Wi-Fi приймач у двигуні.</p>
       <div class="complect-photos">
         <img src="https://sunny-tm.com/image/cache/catalog/Motors/outdoor/KomplSunnyUa-01-700.jpg" alt="Комплектація Sunny" loading="lazy" referrerpolicy="no-referrer">
@@ -240,7 +241,7 @@
 
     <!-- Розумний дім -->
     <div style="margin-top:36px;padding:24px;background:linear-gradient(135deg,#1e3a5f,#2c4d75);color:white;border-radius:14px">
-      <h3 style="color:white;margin:0 0 10px;font-size:20px">📱 Інтеграція з «Розумним домом»</h3>
+      <h2 class="h3" style="color:white;margin:0 0 10px;font-size:20px">📱 Інтеграція з «Розумним домом»</h2>
       <p style="margin:0 0 14px;font-size:14.5px;line-height:1.6;opacity:.95">Двигуни Sunny EW-серії мають вбудований Wi-Fi приймач — управління з мобільного. Сумісні з популярними системами розумного дому.</p>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
         <div style="padding:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;font-size:13px">📱 Apple HomeKit</div>
@@ -253,7 +254,7 @@
     <p style="color:var(--muted);font-size:12.5px;text-align:right;margin-top:24px">Зображення продукції — партнер <a href="https://sunny-tm.com/" target="_blank" rel="noopener" style="color:var(--accent)">sunny-tm.com</a>.</p>
 
     <div class="cta-band" style="margin-top:48px">
-      <div><h3>Підбір двигуна під вашу систему</h3><p>Назвіть розміри системи та тип (Refleksol/ZIP/маркіза/пергола) — менеджер підбере оптимальний двигун.</p></div>
+      <div><h2 class="h3">Підбір двигуна під вашу систему</h2><p>Назвіть розміри системи та тип (Refleksol/ZIP/маркіза/пергола) — менеджер підбере оптимальний двигун.</p></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <a href="tel:+380677712359" class="btn btn-primary">📞 067 771-23-59</a>
         <a href="https://t.me/+380677712359" class="btn btn-ghost">Telegram</a>
@@ -265,11 +266,12 @@
   </div>
 </section>
 
+</main>
 <footer class="footer">
   <div class="footer__inner">
     <div><div class="brand" style="margin-bottom:14px"><img class="brand__logo" src="img/logo.jpg" alt="Корса — вікна, двері, ролети" width="240" height="68"></div></div>
-    <div><h5>Каталог</h5><ul><li><a href="dveri.html">Двері</a></li><li><a href="rolety.html">Зовнішній захист</a></li><li><a href="vikna.html">Вікна</a></li><li><a href="shtory.html">Штори</a></li></ul></div>
-    <div><h5>Контакти</h5><ul><li><a href="tel:+380677712359">067 771-23-59</a></li><li><a href="viber://chat?number=%2B380677712359">Viber</a></li><li><a href="https://t.me/+380677712359">Telegram</a></li><li><a href="https://wa.me/380677712359">WhatsApp</a></li></ul></div>
+    <div><h2>Каталог</h2><ul><li><a href="dveri.html">Двері</a></li><li><a href="rolety.html">Зовнішній захист</a></li><li><a href="vikna.html">Вікна</a></li><li><a href="shtory.html">Штори</a></li></ul></div>
+    <div><h2>Контакти</h2><ul><li><a href="tel:+380677712359">067 771-23-59</a></li><li><a href="viber://chat?number=%2B380677712359">Viber</a></li><li><a href="https://t.me/+380677712359">Telegram</a></li><li><a href="https://wa.me/380677712359">WhatsApp</a></li></ul></div>
   </div>
   <div class="footer__bottom"><span>© 2026 Корса. Дніпро · Обухівка</span></div>
 </footer>

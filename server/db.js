@@ -99,6 +99,45 @@ for (const page of db.prepare(`SELECT id, html FROM pages WHERE html LIKE '%<h2%
   db.prepare('UPDATE pages SET html = ? WHERE id = ?').run(html, page.id);
 }
 
+// Доступність: заголовки без пропуску рівнів (картки .feature — H3, колонки футера — H2)
+// і орієнтир <main> навколо вмісту між шапкою та футером
+for (const page of db.prepare(`SELECT id, html FROM pages WHERE html LIKE '%</header>%'`).all()) {
+  const source = String(page.html);
+  let html = source
+    .replace(/(class="feature"[^>]*>(?:(?!<\/?h\d)[\s\S])*?)<h4(\b[^>]*)>([\s\S]*?)<\/h4>/gi, '$1<h3$2>$3</h3>')
+    .replace(/<footer[\s\S]*?<\/footer>/i, (footer) => footer.replace(/<(\/?)h5\b/gi, '<$1h2'));
+  if (!/<main\b/i.test(html) && /<footer\b/i.test(html)) {
+    html = html.replace(/<\/header>/i, '</header>\n<main>').replace(/<footer\b/i, '</main>\n<footer');
+  }
+  html = promoteHeadings(html);
+  if (html !== source) db.prepare('UPDATE pages SET html = ? WHERE id = ?').run(html, page.id);
+}
+
+/**
+ * Після H1 одразу йшов H3 (назва розділу раніше була H2) — піднімає заголовки на рівень,
+ * від H1 до першого наявного H2. Клас зі старим рівнем зберігає вигляд: h2.h3 у style.css
+ * стилізований як h3.
+ */
+function promoteHeadings(html) {
+  const main = html.match(/<main\b[^>]*>([\s\S]*)<\/main>/i);
+  const levels = main ? [...main[1].matchAll(/<h([1-6])\b/gi)].map((m) => Number(m[1])) : [];
+  if (levels[0] !== 1 || levels[1] !== 3) return html;
+  const start = main.index + main[0].indexOf('</h1>');
+  const nextH2 = html.slice(start).search(/<h2\b/i);
+  const end = nextH2 < 0 ? main.index + main[0].length : start + nextH2;
+  const segment = html
+    .slice(start, end)
+    .replace(/<h([3-6])\b([^>]*)>/gi, (tag, level, attrs) => {
+      const cls = `h${level}`;
+      const withClass = /\bclass="/i.test(attrs)
+        ? attrs.replace(/\bclass="/i, `class="${cls} `)
+        : ` class="${cls}"${attrs}`;
+      return `<h${level - 1}${withClass}>`;
+    })
+    .replace(/<\/h([3-6])>/gi, (tag, level) => `</h${level - 1}>`);
+  return html.slice(0, start) + segment + html.slice(end);
+}
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS page_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

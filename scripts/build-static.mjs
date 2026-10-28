@@ -202,6 +202,7 @@ const SIZES_BY_PARENT = {
   gallery__item: '(min-width: 993px) 180px, 120px',
   'product__img-wrap': '(min-width: 993px) 300px, (min-width: 600px) 30vw, (min-width: 380px) 50vw, calc(100vw - 44px)',
   cat__media: '(min-width: 993px) 400px, calc(100vw - 44px)',
+  'cat__media--grid': '(min-width: 993px) 200px, calc(50vw - 22px)',
   'video-card': '(min-width: 993px) 300px, calc(100vw - 44px)',
   'post-shot': '(min-width: 808px) 760px, 100vw',
 };
@@ -211,7 +212,8 @@ function sizesFor(tag, before) {
   const fixed = tag.match(/\swidth="(\d+)"/i) || tag.match(/style="[^"]*(?:^|[;"\s])width:\s*(\d+)px/i);
   if (fixed) return `${fixed[1]}px`;
   const parents = [...before.matchAll(/<[a-z][^>]*\bclass="([^"]*)"/gi)];
-  const parent = parents.at(-1)?.[1].split(/\s+/).find((cls) => SIZES_BY_PARENT[cls]);
+  // Модифікатор (cat__media--grid) точніший за базовий клас, тож перевіряємо класи з кінця
+  const parent = parents.at(-1)?.[1].split(/\s+/).reverse().find((cls) => SIZES_BY_PARENT[cls]);
   return parent ? SIZES_BY_PARENT[parent] : SIZES_DEFAULT;
 }
 

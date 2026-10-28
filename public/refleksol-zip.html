@@ -22,7 +22,7 @@
   .gallery-triple{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:14px 0 6px}
   .gallery-triple img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
   .info-block{padding:18px 20px;background:white;border:1px solid #cfd9e8;border-left:4px solid #c9821a;border-radius:10px;margin:14px 0}
-  .info-block h4{margin:0 0 8px;color:#1e3a5f;font-size:16px}
+  .info-block h4,.info-block h3:where(.h4){margin:0 0 8px;color:#1e3a5f;font-size:16px}
   .info-block p{margin:0;font-size:14px;color:#444;line-height:1.6}
 </style>
 <link rel="icon" href="favicon.ico" sizes="48x48">
@@ -47,6 +47,7 @@
     </nav>
   </div>
 </header>
+<main>
 
 <section class="section--blueprint section--photo-bg bg--tiles-rolet">
   <div class="section__inner">
@@ -61,14 +62,14 @@
       <!-- 3 ТИПИ СИСТЕМ — головні товари -->
       <div class="collection">
         <div class="collection__head">
-          <h3 style="color:#c9821a">3 типи систем <small>натисніть для детальної інформації</small></h3>
+          <h2 class="h3" style="color:#c9821a">3 типи систем <small>натисніть для детальної інформації</small></h2>
           <span class="collection__price-from">всього 3 моделі</span>
         </div>
         <div class="product-grid">
           <article class="product product--photo">
             <a href="refleksol-spring.html" style="display:block;text-decoration:none;color:inherit">
               <div class="product__img-wrap"><img src="https://sunny-tm.com/image/cache/catalog/ReflexZip/Refleksol/Refleksol-SpringTop-800x800.jpg" alt="Відкрита Refleksol з пружинно-інерційним механізмом" loading="lazy" referrerpolicy="no-referrer"></div>
-              <h4 class="product__name">Відкрита Refleksol з пружинно-інерційним механізмом <span class="badge">новинка</span></h4>
+              <h3 class="h4 product__name">Відкрита Refleksol з пружинно-інерційним механізмом <span class="badge">новинка</span></h3>
               <p class="product__model">Відкрита система без напрямних. Пружинно-інерційний механізм з фіксацією кронштейнами. Вал 60 мм. Вітростійкість 3 бали Бофорта (12-19 км/год). Тільки ручне керування шнуром. Кольори RAL 9003/8014/7016/7024.</p>
             </a>
             <a href="refleksol-spring.html" class="product__btn">Детальніше →</a>
@@ -76,7 +77,7 @@
           <article class="product product--photo">
             <a href="refleksol-otkryta.html" style="display:block;text-decoration:none;color:inherit">
               <div class="product__img-wrap"><img src="https://sunny-tm.com/image/cache/catalog/ReflexZip/Refleksol/Refleksol-TopNew-800x800.jpg" alt="Відкрита Refleksol з тросовою фіксацією" loading="lazy" referrerpolicy="no-referrer"></div>
-              <h4 class="product__name">Відкрита Refleksol <span class="badge">універсальна</span></h4>
+              <h3 class="h4 product__name">Відкрита Refleksol <span class="badge">універсальна</span></h3>
               <p class="product__model">Відкрита система з тросовою фіксацією, без короба. Ручне (редуктор) або автоматичне (електродвигун) керування. Вал 43/60/70/78/85 мм. Кольори RAL + нержавіюча сталь AISI 304.</p>
             </a>
             <a href="refleksol-otkryta.html" class="product__btn">Детальніше →</a>
@@ -84,7 +85,7 @@
           <article class="product product--photo">
             <a href="zip-system.html" style="display:block;text-decoration:none;color:inherit">
               <div class="product__img-wrap"><img src="https://sunny-tm.com/image/cache/catalog/ReflexZip/ZIP/ZIPTop2-800x800.jpg" alt="ZIP-система" loading="lazy" referrerpolicy="no-referrer"></div>
-              <h4 class="product__name">ZIP-система <span class="badge">вітростійка</span></h4>
+              <h3 class="h4 product__name">ZIP-система <span class="badge">вітростійка</span></h3>
               <p class="product__model">Коробна система з напрямними та ZIP-замком («блискавка»). Висока вітростійкість, немає бічних просвітів. Вал 60/78 мм. Ручне або автоматичне керування. Стандарт для готелів, ресторанів.</p>
             </a>
             <a href="zip-system.html" class="product__btn">Детальніше →</a>
@@ -94,7 +95,7 @@
 
       <!-- Головні переваги + ВІДЕО -->
       <div style="margin-top:32px">
-        <h3 style="color:#1e3a5f;margin:0 0 8px">Головні переваги Refleksol і ZIP-системи</h3>
+        <h2 class="h3" style="color:#1e3a5f;margin:0 0 8px">Головні переваги Refleksol і ZIP-системи</h2>
         <a class="video-link" href="https://www.youtube.com/watch?v=nB4bNWMsiq0" target="_blank" rel="noopener">
           <img src="https://img.youtube.com/vi/nB4bNWMsiq0/hqdefault.jpg" alt="Зовнішня сонцезахист від TM SUNNY" loading="lazy" referrerpolicy="no-referrer">
           <div class="play"></div>
@@ -105,23 +106,23 @@
 
       <!-- Область застосування -->
       <div style="margin-top:32px">
-        <h3 style="color:#1e3a5f;margin:0 0 12px">Область використання</h3>
+        <h2 class="h3" style="color:#1e3a5f;margin:0 0 12px">Область використання</h2>
         <p style="margin:0 0 14px;font-size:14.5px;color:#444;line-height:1.6">Зовнішня сонцезахисна система має широку сферу застосування:</p>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px">
           <div class="info-block">
-            <h4>🏠 Житлові будинки</h4>
+            <h3 class="h4">🏠 Житлові будинки</h3>
             <p>Приватні — веранди, тераси, альтанки. Багатоповерхові — вікна, балкони.</p>
           </div>
           <div class="info-block">
-            <h4>🍽️ Ресторани · кафе · готелі</h4>
+            <h3 class="h4">🍽️ Ресторани · кафе · готелі</h3>
             <p>Літні майданчики, тераси, відкриті бізнес-центри, салони, магазини.</p>
           </div>
           <div class="info-block">
-            <h4>🎨 Фотодрук логотипу</h4>
+            <h3 class="h4">🎨 Фотодрук логотипу</h3>
             <p>На Refleksol і ZIP можна нанести логотип — додаткова роль реклами та фірмового стилю.</p>
           </div>
           <div class="info-block">
-            <h4>🏗️ Будь-який фасад</h4>
+            <h3 class="h4">🏗️ Будь-який фасад</h3>
             <p>Сучасний лаконічний дизайн. Можливість фарбування у будь-який колір палітри RAL.</p>
           </div>
         </div>
@@ -129,13 +130,13 @@
 
       <!-- Види рефлексолі -->
       <div style="margin-top:32px">
-        <h3 style="color:#1e3a5f;margin:0 0 12px">Види Refleksol</h3>
+        <h2 class="h3" style="color:#1e3a5f;margin:0 0 12px">Види Refleksol</h2>
         <p style="margin:0 0 18px;font-size:14.5px;color:#444;line-height:1.6">Refleksol бувають <strong>відкритого</strong> і <strong>закритого</strong> типу. Закритий тип називають <strong>ZIP-система</strong>. Відкриті Refleksol відрізняються діаметром валу та розміром кронштейнів кріплення — матеріал в них фіксується за допомогою тросу. ZIP-система має короб і напрямні — полотно фіксується у напрямних за допомогою ZIP-замка.</p>
       </div>
 
       <!-- ШТОРИ НА ВЕРАНДІ — 2 фото -->
       <div style="margin-top:28px">
-        <h3 style="color:#c9821a;margin:0 0 8px">Штори на веранді</h3>
+        <h2 class="h3" style="color:#c9821a;margin:0 0 8px">Штори на веранді</h2>
         <div class="gallery-pair">
           <img src="https://sunny-tm.com/image/catalog/categories/refleksol-i-zip-sistemy/shtory-na-verandu-1.jpg" alt="Штори на веранді" loading="lazy" referrerpolicy="no-referrer">
           <img src="https://sunny-tm.com/image/catalog/categories/refleksol-i-zip-sistemy/shtory-na-verandu-2.jpg" alt="Штори на веранді" loading="lazy" referrerpolicy="no-referrer">
@@ -145,7 +146,7 @@
 
       <!-- ШТОРИ В АЛЬТАНЦІ — 2 фото -->
       <div style="margin-top:28px">
-        <h3 style="color:#c9821a;margin:0 0 8px">Штори в альтанці</h3>
+        <h2 class="h3" style="color:#c9821a;margin:0 0 8px">Штори в альтанці</h2>
         <div class="gallery-pair">
           <img src="https://sunny-tm.com/image/catalog/categories/refleksol-i-zip-sistemy/shtory-v-besedku-1.jpg" alt="Штори в альтанці" loading="lazy" referrerpolicy="no-referrer">
           <img src="https://sunny-tm.com/image/catalog/categories/refleksol-i-zip-sistemy/shtory-v-besedku-2.jpg" alt="Штори в альтанці" loading="lazy" referrerpolicy="no-referrer">
@@ -155,7 +156,7 @@
 
       <!-- КАСЕТНІ СОНЦЕЗАХИСНІ РЕФЛЕКСОЛІ — 2 фото -->
       <div style="margin-top:28px">
-        <h3 style="color:#c9821a;margin:0 0 8px">Касетні сонцезахисні рефлексолі (ZIP)</h3>
+        <h2 class="h3" style="color:#c9821a;margin:0 0 8px">Касетні сонцезахисні рефлексолі (ZIP)</h2>
         <div class="gallery-pair">
           <img src="https://sunny-tm.com/image/catalog/categories/refleksol-i-zip-sistemy/kassetnaya-solncezashchitnaya-refleksol-1.jpg" alt="Касетна сонцезахисна рефлексолі" loading="lazy" referrerpolicy="no-referrer">
           <img src="https://sunny-tm.com/image/catalog/categories/refleksol-i-zip-sistemy/kassetnaya-solncezashchitnaya-refleksol-2.jpg" alt="Касетна сонцезахисна рефлексолі" loading="lazy" referrerpolicy="no-referrer">
@@ -165,7 +166,7 @@
 
       <!-- НАШІ РОБОТИ — 3 фото -->
       <div style="margin-top:32px">
-        <h3 style="color:#c9821a;margin:0 0 8px">Наші роботи</h3>
+        <h2 class="h3" style="color:#c9821a;margin:0 0 8px">Наші роботи</h2>
         <div class="gallery-triple">
           <img src="https://sunny-tm.com/image/catalog/categories/refleksol-i-zip-sistemy/refleksol-s-materialom-scr-4005-05.jpg" alt="Refleksol з матеріалом SCR-4005" loading="lazy" referrerpolicy="no-referrer">
           <img src="https://sunny-tm.com/image/catalog/categories/refleksol-i-zip-sistemy/otkrytaya-refleksol-na-avtomatike-s-trosovoj-fiksaciej.jpg" alt="Відкрита Refleksol на автоматиці з тросовою фіксацією, Soltis 92" loading="lazy" referrerpolicy="no-referrer">
@@ -182,29 +183,29 @@
       <div style="margin-top:36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
         <a href="tkanini-zovnishni.html" style="display:block;padding:24px;background:linear-gradient(135deg,#c9a14a,#b8860b);color:white;border-radius:14px;text-decoration:none;box-shadow:0 4px 16px rgba(201,130,26,.25);transition:transform .15s">
           <div style="font-size:36px;margin-bottom:10px">🎨</div>
-          <h3 style="color:white;margin:0 0 8px;font-size:20px">Каталог тканин →</h3>
+          <h2 class="h3" style="color:white;margin:0 0 8px;font-size:20px">Каталог тканин →</h2>
           <p style="margin:0;font-size:14px;opacity:.95;line-height:1.5">95 артикулів від європейських виробників: BSC, Novosol, Soltis 86/92, Opaque, SCP7-MET та інші. Підбір під ваш проєкт.</p>
         </a>
         <a href="avtomatyka-zovnishnia.html" style="display:block;padding:24px;background:linear-gradient(135deg,#1e3a5f,#2c4d75);color:white;border-radius:14px;text-decoration:none;box-shadow:0 4px 16px rgba(30,58,95,.25);transition:transform .15s">
           <div style="font-size:36px;margin-bottom:10px">⚙️</div>
-          <h3 style="color:white;margin:0 0 8px;font-size:20px">Автоматика →</h3>
+          <h2 class="h3" style="color:white;margin:0 0 8px;font-size:20px">Автоматика →</h2>
           <p style="margin:0;font-size:14px;opacity:.95;line-height:1.5">8 моделей двигунів Sunny для всіх розмірів систем + датчик дощу/сонця/вітру. Інтеграція з «Розумним домом».</p>
         </a>
       </div>
 
     <!-- Переваги -->
     <div class="features" style="margin-top:36px">
-      <div class="feature"><div class="feature__icon">🌡️</div><h4>Економія до 40%</h4><p>На кондиціонуванні влітку — відбиває сонце зовні до потрапляння в приміщення.</p></div>
-      <div class="feature"><div class="feature__icon">🪟</div><h4>Збереження інтер'єру</h4><p>Меблі, підлога, шпалери не вигоряють під УФ-променями.</p></div>
-      <div class="feature"><div class="feature__icon">❄️</div><h4>Без демонтажу на зиму</h4><p>Системи пристосовані до клімату України. Працюють цілорічно.</p></div>
-      <div class="feature"><div class="feature__icon">🏗️</div><h4>Архітектурний елемент</h4><p>Підкреслюють фасад. Палітра RAL для коробів та тканин.</p></div>
-      <div class="feature"><div class="feature__icon">📱</div><h4>Розумний дім</h4><p>Інтеграція з системами Somfy TaHoma, KNX, домашньої автоматики.</p></div>
+      <div class="feature"><div class="feature__icon">🌡️</div><h2 class="h3">Економія до 40%</h2><p>На кондиціонуванні влітку — відбиває сонце зовні до потрапляння в приміщення.</p></div>
+      <div class="feature"><div class="feature__icon">🪟</div><h2 class="h3">Збереження інтер'єру</h2><p>Меблі, підлога, шпалери не вигоряють під УФ-променями.</p></div>
+      <div class="feature"><div class="feature__icon">❄️</div><h2 class="h3">Без демонтажу на зиму</h2><p>Системи пристосовані до клімату України. Працюють цілорічно.</p></div>
+      <div class="feature"><div class="feature__icon">🏗️</div><h2 class="h3">Архітектурний елемент</h2><p>Підкреслюють фасад. Палітра RAL для коробів та тканин.</p></div>
+      <div class="feature"><div class="feature__icon">📱</div><h2 class="h3">Розумний дім</h2><p>Інтеграція з системами Somfy TaHoma, KNX, домашньої автоматики.</p></div>
     </div>
 
     <p style="color:var(--muted);font-size:12.5px;text-align:right;margin-top:24px">Зображення продукції — партнер <a href="https://sunny-tm.com/" target="_blank" rel="noopener" style="color:var(--accent)">sunny-tm.com</a>.</p>
 
     <div class="cta-band" style="margin-top:48px">
-      <div><h3>Розрахунок проєкту</h3><p>Залиште розміри прорізу — менеджер озвучить ціну в робочий день.</p></div>
+      <div><h2 class="h3">Розрахунок проєкту</h2><p>Залиште розміри прорізу — менеджер озвучить ціну в робочий день.</p></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <a href="tel:+380677712359" class="btn btn-primary">📞 067 771-23-59</a>
         <a href="https://t.me/+380677712359" class="btn btn-ghost">Telegram</a>
@@ -216,11 +217,12 @@
   </div>
 </section>
 
+</main>
 <footer class="footer">
   <div class="footer__inner">
     <div><div class="brand" style="margin-bottom:14px"><img class="brand__logo" src="img/logo.jpg" alt="Корса — вікна, двері, ролети" width="240" height="68"></div></div>
-    <div><h5>Каталог</h5><ul><li><a href="dveri.html">Двері</a></li><li><a href="rolety.html">Зовнішній захист</a></li><li><a href="vikna.html">Вікна</a></li><li><a href="shtory.html">Штори</a></li></ul></div>
-    <div><h5>Контакти</h5><ul><li><a href="tel:+380677712359">067 771-23-59</a></li><li><a href="viber://chat?number=%2B380677712359">Viber</a></li><li><a href="https://t.me/+380677712359">Telegram</a></li><li><a href="https://wa.me/380677712359">WhatsApp</a></li></ul></div>
+    <div><h2>Каталог</h2><ul><li><a href="dveri.html">Двері</a></li><li><a href="rolety.html">Зовнішній захист</a></li><li><a href="vikna.html">Вікна</a></li><li><a href="shtory.html">Штори</a></li></ul></div>
+    <div><h2>Контакти</h2><ul><li><a href="tel:+380677712359">067 771-23-59</a></li><li><a href="viber://chat?number=%2B380677712359">Viber</a></li><li><a href="https://t.me/+380677712359">Telegram</a></li><li><a href="https://wa.me/380677712359">WhatsApp</a></li></ul></div>
   </div>
   <div class="footer__bottom"><span>© 2026 Корса. Дніпро · Обухівка</span></div>
 </footer>

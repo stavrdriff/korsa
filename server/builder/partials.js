@@ -25,8 +25,8 @@ export function footerHtml() {
   return `<footer class="footer">
   <div class="footer__inner">
     <div><div class="brand" style="margin-bottom:14px">${LOGO_IMG}</div></div>
-    <div><h5>Каталог</h5><ul><li><a href="dveri.html">Двері</a></li><li><a href="rolety.html">Зовнішній захист</a></li><li><a href="vikna.html">Вікна</a></li><li><a href="shtory.html">Штори</a></li></ul></div>
-    <div><h5>Контакти</h5><ul><li><a href="tel:+380677712359">067 771-23-59</a></li><li><a href="viber://chat?number=%2B380677712359">Viber</a></li><li><a href="https://t.me/+380677712359">Telegram</a></li><li><a href="https://wa.me/380677712359">WhatsApp</a></li></ul></div>
+    <div><h2>Каталог</h2><ul><li><a href="dveri.html">Двері</a></li><li><a href="rolety.html">Зовнішній захист</a></li><li><a href="vikna.html">Вікна</a></li><li><a href="shtory.html">Штори</a></li></ul></div>
+    <div><h2>Контакти</h2><ul><li><a href="tel:+380677712359">067 771-23-59</a></li><li><a href="viber://chat?number=%2B380677712359">Viber</a></li><li><a href="https://t.me/+380677712359">Telegram</a></li><li><a href="https://wa.me/380677712359">WhatsApp</a></li></ul></div>
   </div>
   <div class="footer__bottom"><span>© 2026 Корса. Дніпро · Обухівка</span></div>
 </footer>`;
