@@ -177,7 +177,10 @@ for (const ref of refs) {
 // Готові WebP кешуються за вмістом файлу, тож повторна збірка конвертує лише нові картинки.
 const WEBP_CACHE = path.join(ROOT, 'node_modules', '.cache', 'webp');
 const WEBP_MAX_WIDTH = 2000;
-const WEBP_QUALITY = 80;
+// Якість 75 + повільніше, але сильніше стиснення: на ~25% легше, ніж 80, на око різниці немає
+const WEBP_OPTIONS = { quality: 75, effort: 6, smartSubsample: true };
+// Змінили налаштування — змінюється й ключ кешу, тож усі WebP перегенеруються
+const WEBP_CACHE_VERSION = JSON.stringify(WEBP_OPTIONS);
 const RASTER_RE = /\.(?:jpe?g|png)(?=$|[?#])/i;
 // Ширини зменшених копій: плитки й картки (240), телефон (480, 800 — для екранів 2x), планшет (1200), великий екран (1600)
 const SRCSET_WIDTHS = [240, 480, 800, 1200, 1600];
@@ -193,12 +196,12 @@ async function convertToWebp(rel) {
   // Ключ кешу — оригінал у img/ чи uploads/: його дата зміни не скидається при кожній збірці
   const original = fs.statSync(remoteSources.get(rel) ?? sourceOf(rel));
   const before = original.size;
-  const cached = path.join(WEBP_CACHE, `${crypto.hash('sha1', `${rel}:${before}:${original.mtimeMs}`)}.webp`);
+  const cached = path.join(WEBP_CACHE, `${crypto.hash('sha1', `${rel}:${before}:${original.mtimeMs}:${WEBP_CACHE_VERSION}`)}.webp`);
   if (!fs.existsSync(cached)) {
     const webp = await sharp(file)
       .rotate()
       .resize({ width: WEBP_MAX_WIDTH, withoutEnlargement: true })
-      .webp({ quality: WEBP_QUALITY })
+      .webp(WEBP_OPTIONS)
       .toBuffer();
     fs.writeFileSync(cached, webp);
   }
@@ -214,7 +217,7 @@ async function convertToWebp(rel) {
   for (const w of SRCSET_WIDTHS.filter((n) => n < width)) {
     const variant = cached.replace(/\.webp$/, `-${w}.webp`);
     if (!fs.existsSync(variant)) {
-      fs.writeFileSync(variant, await sharp(cached).resize({ width: w }).webp({ quality: WEBP_QUALITY }).toBuffer());
+      fs.writeFileSync(variant, await sharp(cached).resize({ width: w }).webp(WEBP_OPTIONS).toBuffer());
     }
     const ref = full.replace(/\.webp$/, `-${w}w.webp`);
     copyFile(variant, decodeURIComponent(ref));
