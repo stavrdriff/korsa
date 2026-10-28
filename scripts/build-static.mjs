@@ -102,30 +102,44 @@ function remoteRef(url) {
   return `img/remote/${hostname}/${clean}`;
 }
 
+// Сторінки, де всі фото партнерів потрібні маленькими (картки) — кладемо на сайт усі
+const LOCAL_PHOTO_PAGES = new Set(['catalog.html', 'index.html']);
+const REMOTE_PHOTO_RE = /<img\b[^>]*\ssrc="(https?:\/\/[^"]+\.(?:jpe?g|png))"/gi;
+
+/** Копія фото партнера в dist/ → шлях від кореня сайту */
+async function localCopy(url) {
+  const rel = remoteRef(url);
+  if (!remoteSources.has(rel)) {
+    remoteSources.set(rel, await fetchRemote(url));
+    copyFile(remoteSources.get(rel), rel);
+  }
+  refs.add(rel);
+  return rel;
+}
+
 fs.mkdirSync(REMOTE_CACHE, { recursive: true });
 let mainLocal = 0;
-const mainFailed = [];
+let pageLocal = 0;
+const remoteFailed = [];
 for (const name of htmlFiles) {
   const file = path.join(DIST, name);
-  const html = fs.readFileSync(file, 'utf8');
-  const url = html.match(MAIN_PHOTO_RE)?.[0].match(/\ssrc="(https?:\/\/[^"]+\.(?:jpe?g|png))"/i)?.[1];
-  if (!url) continue;
-  try {
-    const rel = remoteRef(url);
-    if (!remoteSources.has(rel)) {
-      remoteSources.set(rel, await fetchRemote(url));
-      copyFile(remoteSources.get(rel), rel);
+  let html = fs.readFileSync(file, 'utf8');
+  const main = html.match(MAIN_PHOTO_RE)?.[0].match(/\ssrc="(https?:\/\/[^"]+\.(?:jpe?g|png))"/i)?.[1];
+  const urls = LOCAL_PHOTO_PAGES.has(name) ? [...new Set([...html.matchAll(REMOTE_PHOTO_RE)].map((m) => m[1]))] : main ? [main] : [];
+  for (const url of urls) {
+    try {
+      // Підміняємо всюди на сторінці: головне фото товару стоїть і першою мініатюрою
+      html = html.replaceAll(`src="${url}"`, `src="${await localCopy(url)}"`);
+      if (url === main) mainLocal += 1;
+      else pageLocal += 1;
+    } catch (err) {
+      remoteFailed.push(`${name}: ${url} — ${err.message}`);
     }
-    refs.add(rel);
-    // Те саме фото стоїть і першою мініатюрою — підміняємо всюди, щоб не вантажити його двічі
-    fs.writeFileSync(file, html.replaceAll(`src="${url}"`, `src="${rel}"`), 'utf8');
-    mainLocal += 1;
-  } catch (err) {
-    mainFailed.push(`${name}: ${url} — ${err.message}`);
   }
+  if (urls.length) fs.writeFileSync(file, html, 'utf8');
 }
-console.log(`→ Головні фото товарів: ${mainLocal} перенесено на сайт`);
-for (const line of mainFailed) console.warn(`! Не вдалося завантажити, лишилось зовнішнім: ${line}`);
+console.log(`→ Фото партнерів на сайті: головних фото товарів ${mainLocal}, у картках каталогу й головної ${pageLocal}`);
+for (const line of remoteFailed) console.warn(`! Не вдалося завантажити, лишилось зовнішнім: ${line}`);
 
 // sitemap, robots, фавіконки й маніфест — усе, що лежить у public/ поруч зі сторінками
 for (const name of fs.readdirSync(PUBLIC_DIR)) {
@@ -165,8 +179,8 @@ const WEBP_CACHE = path.join(ROOT, 'node_modules', '.cache', 'webp');
 const WEBP_MAX_WIDTH = 2000;
 const WEBP_QUALITY = 80;
 const RASTER_RE = /\.(?:jpe?g|png)(?=$|[?#])/i;
-// Ширини зменшених копій: телефон (480, 800 — для екранів 2x), планшет (1200), великий екран (1600)
-const SRCSET_WIDTHS = [480, 800, 1200, 1600];
+// Ширини зменшених копій: плитки й картки (240), телефон (480, 800 — для екранів 2x), планшет (1200), великий екран (1600)
+const SRCSET_WIDTHS = [240, 480, 800, 1200, 1600];
 /** Повний WebP → усі його розміри від найменшого: [{ ref, w }] */
 const responsive = new Map();
 
