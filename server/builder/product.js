@@ -54,7 +54,7 @@ function renderProductHtml(bundle) {
 
   const video = product.video_url
     ? `<a class="video-link" href="${esc(product.video_url)}" target="_blank" rel="noopener">
-          <img src="${esc(product.video_poster || '')}" alt="" loading="lazy" referrerpolicy="no-referrer">
+          <img src="${esc(product.video_poster || '')}" alt="${esc(`Відео: ${product.title}`)}" loading="lazy" referrerpolicy="no-referrer">
           <div class="play"></div>
           <div class="label">▶ Відео огляд / встановлення</div>
         </a>`
