@@ -1884,6 +1884,10 @@ body > * {
 .lightbox.active {
   display: flex;
 }
+/* Кольори тканин відкриваються у лайтбоксі */
+.color-card {
+  cursor: zoom-in;
+}
 .lightbox img {
   max-width: 100%;
   max-height: 100%;

@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Lightbox: article photos and gallery tiles
+  // Lightbox: article photos, gallery tiles and fabric colour swatches
   let lightbox = document.getElementById('lightbox');
   if (!lightbox || !lightbox.querySelector('.lightbox__nav')) {
     if (lightbox) lightbox.remove();
@@ -101,13 +101,13 @@ document.addEventListener('DOMContentLoaded', () => {
     lightbox.classList.remove('active');
     document.body.style.overflow = '';
   };
-  document.querySelectorAll('.gallery__item, .post-shot').forEach((item) => {
+  document.querySelectorAll('.gallery__item, .post-shot, .color-card').forEach((item) => {
     item.addEventListener('click', (e) => {
       const img = item.querySelector('img');
       if (!img) return;
       e.preventDefault();
-      const group = item.closest('.post-gallery, .gallery') || item.parentElement;
-      frames = [...group.querySelectorAll('.post-shot img, .gallery__item img')];
+      const group = item.closest('.post-gallery, .gallery, .colors-grid') || item.parentElement;
+      frames = [...group.querySelectorAll('.post-shot img, .gallery__item img, .color-card img')];
       show(Math.max(0, frames.indexOf(img)));
     });
   });

@@ -75,6 +75,58 @@ for (const name of htmlFiles) {
   fs.writeFileSync(path.join(DIST, name), rewriteRefs(html, refs), 'utf8');
 }
 
+// Головне фото товару (#ppMain) — найбільший елемент першого екрана (LCP). Якщо воно з сайту
+// партнера, кладемо копію на наш сайт: так воно проходить WebP і srcset і не чекає чужого сервера.
+// Галерея й решта фото лишаються за оригінальними адресами. У CMS посилання не змінюються.
+const MAIN_PHOTO_RE = /<img\b[^>]*\bid="ppMain"[^>]*>/i;
+const REMOTE_CACHE = path.join(ROOT, 'node_modules', '.cache', 'remote');
+/** Копія у dist/ → файл у кеші (ключ кешу WebP замість оригіналу в img/) */
+const remoteSources = new Map();
+
+async function fetchRemote(url) {
+  const ext = path.extname(new URL(url).pathname).toLowerCase() || '.jpg';
+  const cached = path.join(REMOTE_CACHE, `${crypto.hash('sha1', url)}${ext}`);
+  if (!fs.existsSync(cached)) {
+    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(20000) });
+    if (!res.ok || !String(res.headers.get('content-type')).startsWith('image/')) throw new Error(`HTTP ${res.status}`);
+    fs.writeFileSync(`${cached}.tmp`, Buffer.from(await res.arrayBuffer()));
+    fs.renameSync(`${cached}.tmp`, cached);
+  }
+  return cached;
+}
+
+/** https://sunny-tm.com/image/a b.jpg → img/remote/sunny-tm.com/image/a-b.jpg */
+function remoteRef(url) {
+  const { hostname, pathname } = new URL(url);
+  const clean = decodeURIComponent(pathname).replace(/[^\w./-]+/g, '-').replace(/^\/+/, '');
+  return `img/remote/${hostname}/${clean}`;
+}
+
+fs.mkdirSync(REMOTE_CACHE, { recursive: true });
+let mainLocal = 0;
+const mainFailed = [];
+for (const name of htmlFiles) {
+  const file = path.join(DIST, name);
+  const html = fs.readFileSync(file, 'utf8');
+  const url = html.match(MAIN_PHOTO_RE)?.[0].match(/\ssrc="(https?:\/\/[^"]+\.(?:jpe?g|png))"/i)?.[1];
+  if (!url) continue;
+  try {
+    const rel = remoteRef(url);
+    if (!remoteSources.has(rel)) {
+      remoteSources.set(rel, await fetchRemote(url));
+      copyFile(remoteSources.get(rel), rel);
+    }
+    refs.add(rel);
+    // Те саме фото стоїть і першою мініатюрою — підміняємо всюди, щоб не вантажити його двічі
+    fs.writeFileSync(file, html.replaceAll(`src="${url}"`, `src="${rel}"`), 'utf8');
+    mainLocal += 1;
+  } catch (err) {
+    mainFailed.push(`${name}: ${url} — ${err.message}`);
+  }
+}
+console.log(`→ Головні фото товарів: ${mainLocal} перенесено на сайт`);
+for (const line of mainFailed) console.warn(`! Не вдалося завантажити, лишилось зовнішнім: ${line}`);
+
 // sitemap, robots, фавіконки й маніфест — усе, що лежить у public/ поруч зі сторінками
 for (const name of fs.readdirSync(PUBLIC_DIR)) {
   const from = path.join(PUBLIC_DIR, name);
@@ -125,7 +177,7 @@ function webpName(ref) {
 async function convertToWebp(rel) {
   const file = path.join(DIST, decodeURIComponent(rel));
   // Ключ кешу — оригінал у img/ чи uploads/: його дата зміни не скидається при кожній збірці
-  const original = fs.statSync(sourceOf(rel));
+  const original = fs.statSync(remoteSources.get(rel) ?? sourceOf(rel));
   const before = original.size;
   const cached = path.join(WEBP_CACHE, `${crypto.hash('sha1', `${rel}:${before}:${original.mtimeMs}`)}.webp`);
   if (!fs.existsSync(cached)) {
