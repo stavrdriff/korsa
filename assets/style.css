@@ -300,6 +300,10 @@ h3,h4{color:var(--text)}
 .cats{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 .cats>article{display:flex;min-width:0}
 .cats>article>.cat{flex:1}
+.pager{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:32px}
+.pager a,.pager span{min-width:44px;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--text);text-align:center;font-weight:600;text-decoration:none;transition:background var(--t),color var(--t)}
+.pager a:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.pager [aria-current]{background:var(--accent);border-color:var(--accent);color:#fff}
 .post-read{max-width:760px}
 .post-read h1{margin-bottom:8px}
 .post-date{color:var(--muted);margin:0 0 22px;font-size:14px}

@@ -211,6 +211,43 @@ function articleFile(slug) {
   return `stattia-${slug}.html`;
 }
 
+/** Скільки карток матеріалів на одній сторінці списку */
+const POSTS_PER_PAGE = 9;
+
+/** Сторінки списку: statti.html, statti-2.html, statti-3.html … */
+function stattiFile(pageNo) {
+  return pageNo > 1 ? `statti-${pageNo}.html` : 'statti.html';
+}
+
+/** Опубліковані матеріали для списку — найновіші першими */
+function listedPosts(items) {
+  return (items || [])
+    .filter((item) => item.kind === 'post' && Number(item.published ?? 1) && (item.title || item.href))
+    .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+}
+
+function stattiPageCount(items) {
+  return Math.max(1, Math.ceil(listedPosts(items).length / POSTS_PER_PAGE));
+}
+
+/** Перемикач сторінок під картками; при одній сторінці його немає */
+function stattiPager(pageNo, pages) {
+  if (pages < 2) return '';
+  const link = (n, label, rel) => `<a href="${stattiFile(n)}"${rel ? ` rel="${rel}"` : ''}>${label}</a>`;
+  const nums = Array.from({ length: pages }, (_, i) => i + 1).map((n) =>
+    n === pageNo ? `<span aria-current="page">${n}</span>` : link(n, n)
+  );
+  return [
+    '<nav class="pager" aria-label="Сторінки матеріалів">',
+    pageNo > 1 && link(pageNo - 1, '← Новіші', 'prev'),
+    ...nums,
+    pageNo < pages && link(pageNo + 1, 'Старіші →', 'next'),
+    '</nav>',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
 function textToParagraphs(text) {
   return String(text || '')
     .trim()
@@ -275,15 +312,15 @@ function openGraphTags(item, lead) {
   ]);
 }
 
-/** OpenGraph для statti.html: заголовок і опис беремо зі сторінки, картинку — з найновішого матеріалу */
-function withStattiOpenGraph(html, items) {
+/** OpenGraph для statti.html (і statti-N.html): заголовок і опис беремо зі сторінки, картинку — з найновішого матеріалу */
+function withStattiOpenGraph(html, items, pageNo = 1) {
   const title = decode((html.match(/<title>([\s\S]*?)<\/title>/i) || [])[1] || '').trim();
   const desc = decode((html.match(/<meta name="description" content="([^"]*)"/i) || [])[1] || '');
   const latest = (items || [])
     .filter((item) => item.kind === 'post' && Number(item.published ?? 1))
     .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
   const image = latest.map(postImage).find(Boolean) || '';
-  const url = absoluteUrl('statti.html');
+  const url = absoluteUrl(stattiFile(pageNo));
   const block = `<!-- og:start -->
 <link rel="canonical" href="${esc(url)}">
 ${metaTags([
@@ -367,6 +404,25 @@ function writeArticlePages(shell, items) {
   writeSitemap();
 }
 
+/** Сторінки списку після першої (statti-2.html …) з готової statti.html; зайві, коли матеріалів поменшало, — видаляємо */
+function writeStattiPages(shell, items) {
+  const pages = stattiPageCount(items);
+  const keep = new Set();
+  for (let n = 2; n <= pages; n += 1) {
+    const name = stattiFile(n);
+    keep.add(name);
+    const html = renderStattiPosts(shell, items, n)
+      .replace(/<title>([\s\S]*?)(\s*\|\s*Корса)?<\/title>/i, (_, title, brand = '') => `<title>${title} — сторінка ${n}${brand}</title>`)
+      .replace(/(<meta name="description" content=")([^"]*)(")/i, (_, open, desc, close) => `${open}${desc} Сторінка ${n}.${close}`);
+    writePage(path.join(PUBLIC_DIR, name), withStattiOpenGraph(html, items, n));
+  }
+  for (const name of fs.readdirSync(PUBLIC_DIR)) {
+    if (/^statti-\d+\.html$/.test(name) && !keep.has(name)) {
+      fs.unlinkSync(path.join(PUBLIC_DIR, name));
+    }
+  }
+}
+
 function localStamp(date = new Date()) {
   const pad = (n) => String(n).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}.${String(date.getMilliseconds()).padStart(3, '0')}`;
@@ -387,10 +443,9 @@ function withPostDates(items, prevById) {
   });
 }
 
-function renderStattiPosts(html, items) {
-  const cards = (items || [])
-    .filter((item) => item.kind === 'post' && Number(item.published ?? 1) && (item.title || item.href))
-    .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
+function renderStattiPosts(html, items, pageNo = 1) {
+  const cards = listedPosts(items)
+    .slice((pageNo - 1) * POSTS_PER_PAGE, pageNo * POSTS_PER_PAGE)
     .map((item) => {
       const videos = postVideos(item);
       const image = coverPhoto(item) || (videos[0] ? videoPoster(videos[0]) : '');
@@ -415,7 +470,8 @@ function renderStattiPosts(html, items) {
   </article>`;
     })
     .join('\n');
-  const block = `<div class="cats" id="posts" style="margin-top:28px">\n${cards}\n</div>`;
+  const pager = stattiPager(pageNo, stattiPageCount(items));
+  const block = `<div class="cats" id="posts" style="margin-top:28px">\n${cards}\n</div>${pager ? `\n${pager}` : ''}`;
   const start = '<!-- posts:start -->';
   const end = '<!-- posts:end -->';
   if (html.includes(start) && html.includes(end)) {
@@ -476,6 +532,7 @@ export function publishArticlePages() {
   const html = withStattiOpenGraph(renderStattiPosts(page.html, items), items);
   if (html !== page.html) db.prepare(`UPDATE pages SET html = ? WHERE id = ?`).run(html, page.id);
   writePage(path.join(PUBLIC_DIR, 'statti.html'), html);
+  writeStattiPages(html, items);
   writeArticlePages(html, items);
   return items.filter((item) => item.kind === 'post' && item.slug && Number(item.published ?? 1)).length;
 }
@@ -607,8 +664,10 @@ router.put('/:id', requireAuth, async (req, res) => {
       });
     }
     if (existing.slug === 'statti' && html) {
-      html = withStattiOpenGraph(html, Array.isArray(b.items) ? b.items : loadItems(id));
+      const posts = Array.isArray(b.items) ? b.items : loadItems(id);
+      html = withStattiOpenGraph(html, posts);
       writePage(path.join(PUBLIC_DIR, 'statti.html'), html);
+      writeStattiPages(html, posts);
       writeSitemap();
     }
     db.prepare(
