@@ -47,7 +47,7 @@ function renderProductHtml(bundle) {
       ? `<div class="pp-thumbs">${media
           .map(
             (m) =>
-              `<img src="${esc(m.path)}" alt="${esc(m.alt || product.title)}" loading="lazy" referrerpolicy="no-referrer" onclick="document.getElementById('ppMain').src=this.src">`
+              `<img src="${esc(m.path)}" alt="${esc(m.alt || product.title)}" loading="lazy" referrerpolicy="no-referrer" onclick="const m=document.getElementById('ppMain');m.srcset=this.srcset;m.src=this.src">`
           )
           .join('')}</div>`
       : '';

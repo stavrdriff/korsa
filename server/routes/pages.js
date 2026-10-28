@@ -92,9 +92,12 @@ async function downloadInstagramPoster(code) {
 export async function ensureInstagramPosters(items) {
   const codes = new Set();
   for (const item of items || []) {
-    if (item.kind !== 'post' || coverPhoto(item)) continue;
-    const code = instagramCode(postVideos(item)[0] || '');
-    if (code && !instagramPoster(postVideos(item)[0])) codes.add(code);
+    if (item.kind !== 'post') continue;
+    // Прев'ю потрібне кожному відео: і для картки без фото, і для заглушки плеєра в статті
+    for (const url of postVideos(item)) {
+      const code = instagramCode(url);
+      if (code && !instagramPoster(url)) codes.add(code);
+    }
   }
   await Promise.all(
     [...codes].map((code) =>
@@ -103,15 +106,25 @@ export async function ensureInstagramPosters(items) {
   );
 }
 
+/**
+ * Заглушка замість плеєра: прев'ю з кнопкою, а сам iframe (Instagram — це ~1 МБ скриптів)
+ * assets/script.js підставляє лише після кліку
+ */
+function videoFacade(modifier, embed, poster, name) {
+  return `<div class="post-video${modifier}"><button type="button" class="post-video__facade" data-embed="${esc(embed)}" aria-label="Дивитися відео: ${name}"><img src="${esc(poster)}" alt="${name}" loading="lazy"></button></div>`;
+}
+
 function videoPlayer(url, title) {
   const name = esc(title || 'Відео');
   const youtube = youtubeId(url);
   if (youtube) {
-    return `<div class="post-video"><iframe src="https://www.youtube.com/embed/${esc(youtube)}" title="${name}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+    return videoFacade('', `https://www.youtube.com/embed/${youtube}?autoplay=1`, youtubePoster(url), name);
   }
   const instagram = instagramEmbed(url);
   if (!instagram) return '';
-  return `<div class="post-video post-video--ig"><iframe src="${esc(instagram)}" title="${name}" allowfullscreen></iframe></div>`;
+  const poster = instagramPoster(url);
+  if (poster) return videoFacade(' post-video--ig', instagram, poster, name);
+  return `<div class="post-video post-video--ig"><iframe src="${esc(instagram)}" title="${name}" loading="lazy" allowfullscreen></iframe></div>`;
 }
 
 function explicitList(value) {

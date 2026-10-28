@@ -122,4 +122,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'ArrowRight') show(index + 1);
     if (e.key === 'ArrowLeft') show(index - 1);
   });
+
+  // Відео в статтях: справжній плеєр YouTube / Instagram підставляємо лише після кліку по прев'ю
+  document.querySelectorAll('.post-video__facade').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const frame = document.createElement('iframe');
+      frame.src = btn.dataset.embed;
+      frame.title = btn.getAttribute('aria-label') || '';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+      frame.allowFullscreen = true;
+      btn.replaceWith(frame);
+    });
+  });
 });

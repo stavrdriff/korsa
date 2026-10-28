@@ -3,9 +3,12 @@
 // в браузері прямо з диска або залити на Netlify.
 //
 //   npm run build
+import { execFile } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import ffmpegPath from 'ffmpeg-static';
+import { transform } from 'lightningcss';
 import sharp from 'sharp';
 import { PUBLIC_DIR, ROOT, SITE_URL, UPLOADS_DIR } from '../server/config.js';
 import { publishAllPages } from '../server/builder/pages.js';
@@ -13,6 +16,12 @@ import { publishAllProducts } from '../server/builder/product.js';
 import { ensureStattiPosters } from '../server/routes/pages.js';
 
 const DIST = path.join(ROOT, 'dist');
+/** execFile як Promise: чекаємо завершення ffmpeg */
+function execFileAsync(command, args) {
+  return new Promise((resolve, reject) => {
+    execFile(command, args, (err) => (err ? reject(err) : resolve()));
+  });
+}
 
 // Атрибути й url(...), у яких можуть бути посилання на файли
 const REF_RE = /((?:href|src|poster|data-video)\s*=\s*["'])([^"']*)(["'])|(url\(\s*["']?)([^"')]*)(["']?\s*\))/gi;
@@ -65,6 +74,7 @@ for (const name of htmlFiles) {
   const html = fs.readFileSync(path.join(PUBLIC_DIR, name), 'utf8');
   fs.writeFileSync(path.join(DIST, name), rewriteRefs(html, refs), 'utf8');
 }
+
 // sitemap, robots, фавіконки й маніфест — усе, що лежить у public/ поруч зі сторінками
 for (const name of fs.readdirSync(PUBLIC_DIR)) {
   const from = path.join(PUBLIC_DIR, name);
@@ -203,14 +213,23 @@ const SIZES_BY_PARENT = {
   'product__img-wrap': '(min-width: 993px) 300px, (min-width: 600px) 30vw, (min-width: 380px) 50vw, calc(100vw - 44px)',
   cat__media: '(min-width: 993px) 400px, calc(100vw - 44px)',
   'cat__media--grid': '(min-width: 993px) 200px, calc(50vw - 22px)',
+  'vendor-card__media': '(min-width: 993px) 600px, calc(100vw - 44px)',
   'video-card': '(min-width: 993px) 300px, calc(100vw - 44px)',
   'post-shot': '(min-width: 808px) 760px, 100vw',
+  'pp-thumbs': '(min-width: 881px) 120px, 20vw',
+  'post-video__facade': '(min-width: 808px) 760px, 100vw',
+};
+// Картинки, розмір яких задає їхній власний клас
+const SIZES_BY_CLASS = {
+  'pp-main-img': '(min-width: 881px) 620px, calc(100vw - 44px)',
 };
 const SIZES_DEFAULT = '(min-width: 1288px) 1240px, calc(100vw - 44px)';
 
 function sizesFor(tag, before) {
   const fixed = tag.match(/\swidth="(\d+)"/i) || tag.match(/style="[^"]*(?:^|[;"\s])width:\s*(\d+)px/i);
   if (fixed) return `${fixed[1]}px`;
+  const own = tag.match(/\sclass="([^"]*)"/i)?.[1].split(/\s+/).find((cls) => SIZES_BY_CLASS[cls]);
+  if (own) return SIZES_BY_CLASS[own];
   const parents = [...before.matchAll(/<[a-z][^>]*\bclass="([^"]*)"/gi)];
   // Модифікатор (cat__media--grid) точніший за базовий клас, тож перевіряємо класи з кінця
   const parent = parents.at(-1)?.[1].split(/\s+/).reverse().find((cls) => SIZES_BY_PARENT[cls]);
@@ -230,13 +249,60 @@ function useSrcset(html) {
   });
 }
 
-for (const name of htmlFiles) {
-  const file = path.join(DIST, name);
-  fs.writeFileSync(file, useSrcset(useWebp(fs.readFileSync(file, 'utf8'), '.')), 'utf8');
+// Перші фото в <main> — зазвичай найбільший елемент першого екрана (LCP): вантажимо їх одразу,
+// а найпершому даємо високий пріоритет. Решта лишається з loading="lazy".
+const EAGER_IMAGES = 3;
+
+function prioritizeFirstImages(html) {
+  const main = html.search(/<main\b/i);
+  if (main < 0) return html;
+  let count = 0;
+  // На сторінці товару перший екран — це одне головне фото; у сітках карток — кілька
+  const limit = html.includes('id="ppMain"') ? 1 : EAGER_IMAGES;
+  // Мініатюри під фото товару не конкурують за мережу з головним фото (LCP)
+  const thumbs = [...html.slice(main).matchAll(/<div class="pp-thumbs">[\s\S]*?<\/div>/gi)].map((m) => [m.index, m.index + m[0].length]);
+  const body = html.slice(main).replace(/<img\b[^>]*>/gi, (tag, offset) => {
+    if (count >= limit || thumbs.some(([from, to]) => offset > from && offset < to)) return tag;
+    count += 1;
+    const eager = tag.replace(/\sloading="lazy"/i, '');
+    return count === 1 && !/\sfetchpriority=/i.test(eager) ? eager.replace(/^<img\b/i, '<img fetchpriority="high"') : eager;
+  });
+  return html.slice(0, main) + body;
 }
+
+/** Перші фото з чужого сервера (SUNNY тощо): браузер з'єднується з ним заздалегідь, ще розбираючи HTML */
+function preconnectImageHosts(html) {
+  const main = html.search(/<main\b/i);
+  if (main < 0) return html;
+  const first = [...html.slice(main).matchAll(/<img\b[^>]*\ssrc="(https?:\/\/[^/"]+)/gi)].slice(0, EAGER_IMAGES);
+  const hosts = [...new Set(first.map((m) => m[1]))].filter((host) => !html.includes(`rel="preconnect" href="${host}"`));
+  if (!hosts.length) return html;
+  return html.replace('</head>', `${hosts.map((host) => `<link rel="preconnect" href="${host}">`).join('\n')}\n</head>`);
+}
+
 for (const name of fs.readdirSync(path.join(DIST, 'assets')).filter((n) => n.endsWith('.css'))) {
   const file = path.join(DIST, 'assets', name);
   fs.writeFileSync(file, useWebp(fs.readFileSync(file, 'utf8'), 'assets'), 'utf8');
+}
+
+// Стилі вбудовуємо в кожну сторінку мініфікованими — без окремого запиту, що блокує відображення.
+// Посилання з CSS рахувались від assets/, а зі сторінки — від кореня сайту.
+const STYLESHEET_LINK = '<link rel="stylesheet" href="assets/style.css">';
+const SCRIPT_TAG = '<script src="assets/script.js">';
+const inlineCss = transform({
+  filename: 'style.css',
+  code: new TextEncoder().encode(fs.readFileSync(path.join(DIST, 'assets', 'style.css'), 'utf8')),
+  minify: true,
+})
+  .code.toString()
+  .replace(/url\((["']?)\.\.\//g, 'url($1');
+
+for (const name of htmlFiles) {
+  const file = path.join(DIST, name);
+  const html = preconnectImageHosts(prioritizeFirstImages(useSrcset(useWebp(fs.readFileSync(file, 'utf8'), '.'))));
+  // Скрипт лише додає інтерактивність (стартує на DOMContentLoaded) — сторінка не чекає на нього
+  const ready = html.replace(STYLESHEET_LINK, `<style>${inlineCss}</style>`).replace(SCRIPT_TAG, '<script src="assets/script.js" defer>');
+  fs.writeFileSync(file, ready, 'utf8');
 }
 const mb = (n) => (n / 1024 / 1024).toFixed(0);
 console.log(`→ WebP: ${webps.size} з ${rasters.length} картинок, ${mb(webpBefore)} МБ → ${mb(webpAfter)} МБ`);
@@ -245,6 +311,39 @@ if (broken.length) {
   console.warn(`! Не вдалося перетворити на WebP — лишилися як є (${broken.length}):`);
   for (const line of broken.sort()) console.warn(`   ${line}`);
 }
+
+// Відео: H.264 MP4 лишається (його відтворюють усі айфони), але з розумним бітрейтом.
+// Оригінали в img/ не змінюються, стиснені версії кешуються, як і WebP.
+const VIDEO_CACHE = path.join(ROOT, 'node_modules', '.cache', 'video');
+const VIDEO_ARGS = [
+  '-c:v', 'libx264', '-preset', 'slow', '-crf', '27', '-profile:v', 'high', '-pix_fmt', 'yuv420p',
+  '-vf', "scale='min(1280,iw)':-2", '-fpsmax', '30',
+  '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart',
+];
+
+fs.mkdirSync(VIDEO_CACHE, { recursive: true });
+const videos = [...refs].filter((ref) => /^(?:img|uploads)\/.+\.mp4$/i.test(ref) && fs.existsSync(path.join(DIST, decodeURIComponent(ref))));
+let videoBefore = 0;
+let videoAfter = 0;
+for (const rel of videos) {
+  const file = path.join(DIST, decodeURIComponent(rel));
+  const original = fs.statSync(sourceOf(rel));
+  const cached = path.join(VIDEO_CACHE, `${crypto.hash('sha1', `${rel}:${original.size}:${original.mtimeMs}`)}.mp4`);
+  if (!fs.existsSync(cached)) {
+    try {
+      await execFileAsync(ffmpegPath, ['-y', '-loglevel', 'error', '-i', file, ...VIDEO_ARGS, `${cached}.tmp.mp4`]);
+      fs.renameSync(`${cached}.tmp.mp4`, cached);
+    } catch (err) {
+      console.warn(`! Не вдалося стиснути ${rel}: ${err.message.split('\n')[0]}`);
+      continue;
+    }
+  }
+  const size = fs.statSync(cached).size;
+  videoBefore += original.size;
+  videoAfter += Math.min(size, original.size);
+  if (size < original.size) fs.copyFileSync(cached, file);
+}
+console.log(`→ Відео: ${videos.length} файлів, ${mb(videoBefore)} МБ → ${mb(videoAfter)} МБ`);
 
 let bytes = 0;
 let files = 0;
