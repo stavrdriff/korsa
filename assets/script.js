@@ -87,7 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!frames.length) return;
     index = (i + frames.length) % frames.length;
     const img = frames[index];
-    lbImg.src = img.currentSrc || img.src;
+    // Мініатюра могла завантажити зменшену копію — у лайтбоксі показуємо найбільшу зі srcset
+    const largest = img.srcset ? img.srcset.split(',').pop().trim().split(/\s+/)[0] : '';
+    lbImg.src = largest || img.currentSrc || img.src;
     lbImg.alt = img.alt || '';
     const many = frames.length > 1;
     prevBtn.hidden = !many;

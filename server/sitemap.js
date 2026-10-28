@@ -43,9 +43,17 @@ function withIcons(html) {
   return html.replace(ICON_LINE_RE, '').replace('</head>', `${ICON_TAGS}</head>`);
 }
 
+/** Пункт меню, що веде на саму сторінку, — не посилання, а підсвічений текст */
+function withCurrentNav(html, name) {
+  const link = new RegExp(`<a href="${name.replaceAll('.', '\\.')}"(?: class="active")?>([^<]*)</a>`);
+  return html.replace(/<nav class="nav">[\s\S]*?<\/nav>/, (nav) =>
+    nav.replace(link, '<span class="nav__current" aria-current="page">$1</span>')
+  );
+}
+
 /** Записує сторінку лише якщо вміст змінився — інакше дата файлу (lastmod у sitemap) лишається старою */
 export function writePage(file, content) {
-  if (file.endsWith('.html')) content = withIcons(content);
+  if (file.endsWith('.html')) content = withCurrentNav(withIcons(content), path.basename(file));
   if (fs.existsSync(file) && fs.readFileSync(file, 'utf8') === content) return false;
   fs.writeFileSync(file, content, 'utf8');
   return true;
@@ -74,6 +82,7 @@ export function writeSitemap() {
     return `  <url><loc>${esc(loc)}</loc><lastmod>${modified}</lastmod></url>`;
   });
   writePage(LASTMOD_FILE, `${JSON.stringify(next, null, 2)}\n`);
+  // noinspection HttpUrlsUsage — це ідентифікатор схеми sitemap, він має бути саме з http://
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
   writePage(path.join(PUBLIC_DIR, 'sitemap.xml'), xml);
   const robots = `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`;
