@@ -110,8 +110,8 @@ export async function ensureInstagramPosters(items) {
  * Заглушка замість плеєра: прев'ю з кнопкою, а сам iframe (Instagram — це ~1 МБ скриптів)
  * assets/script.js підставляє лише після кліку
  */
-function videoFacade(modifier, embed, poster, name) {
-  return `<div class="post-video${modifier}"><button type="button" class="post-video__facade" data-embed="${esc(embed)}" aria-label="Дивитися відео: ${name}"><img src="${esc(poster)}" alt="${name}" loading="lazy"></button></div>`;
+function videoFacade(modifier, embed, poster, name, facadeModifier = '') {
+  return `<div class="post-video${modifier}"><button type="button" class="post-video__facade${facadeModifier}" data-embed="${esc(embed)}" aria-label="Дивитися відео: ${name}"><img src="${esc(poster)}" alt="${name}" loading="lazy"></button></div>`;
 }
 
 function videoPlayer(url, title) {
@@ -123,7 +123,7 @@ function videoPlayer(url, title) {
   const instagram = instagramEmbed(url);
   if (!instagram) return '';
   const poster = instagramPoster(url);
-  if (poster) return videoFacade(' post-video--ig', instagram, poster, name);
+  if (poster) return videoFacade(' post-video--ig', instagram, poster, name, ' post-video__facade--ig');
   return `<div class="post-video post-video--ig"><iframe src="${esc(instagram)}" title="${name}" loading="lazy" allowfullscreen></iframe></div>`;
 }
 

@@ -276,14 +276,16 @@ function useWebp(text, base) {
 // останнє значення (без умови) — для телефону.
 const SIZES_BY_PARENT = {
   gallery__item: '(min-width: 993px) 180px, 120px',
-  'product__img-wrap': '(min-width: 993px) 300px, (min-width: 600px) 30vw, (min-width: 380px) 50vw, calc(100vw - 44px)',
+  'product__img-wrap': '(min-width: 993px) 300px, (min-width: 600px) 30vw, (min-width: 380px) 40vw, calc(100vw - 44px)',
   cat__media: '(min-width: 993px) 400px, calc(100vw - 44px)',
+  cat: '(min-width: 993px) 400px, calc(100vw - 44px)',
+  'hero-photo': '(min-width: 1288px) 620px, (min-width: 781px) 50vw, calc(100vw - 44px)',
   'cat__media--grid': '(min-width: 993px) 200px, calc(50vw - 22px)',
-  'vendor-card__media': '(min-width: 993px) 600px, calc(100vw - 44px)',
-  'video-card': '(min-width: 993px) 300px, calc(100vw - 44px)',
+  'video-card': '(min-width: 993px) 240px, calc(100vw - 44px)',
   'post-shot': '(min-width: 808px) 760px, 100vw',
   'pp-thumbs': '(min-width: 881px) 120px, 20vw',
   'post-video__facade': '(min-width: 808px) 760px, 100vw',
+  'post-video__facade--ig': '(min-width: 460px) 420px, 100vw',
 };
 // Картинки, розмір яких задає їхній власний клас
 const SIZES_BY_CLASS = {
@@ -291,14 +293,29 @@ const SIZES_BY_CLASS = {
 };
 const SIZES_DEFAULT = '(min-width: 1288px) 1240px, calc(100vw - 44px)';
 
-function sizesFor(tag, before) {
-  const fixed = tag.match(/\swidth="(\d+)"/i) || tag.match(/style="[^"]*(?:^|[;"\s])width:\s*(\d+)px/i);
+/** Картки-розділи (.vendor-card) у сітці auto-fit minmax(300px): 2 картки — по ~610 px, 3+ — по ~400 px */
+function vendorCardSizes(html) {
+  const cards = (html.match(/class="vendor-card__media"/g) || []).length;
+  return `(min-width: 993px) ${cards >= 3 ? 400 : cards === 2 ? 610 : 1240}px, calc(100vw - 44px)`;
+}
+
+function sizesFor(tag, before, html) {
+  // Атрибут width — це ширина на екрані лише тоді, коли стиль її не перевизначає (width:100% тощо)
+  const styleWidth = tag.match(/style="(?:[^"]*[;\s])?width:\s*([\d.]+)(px|%)/i);
+  const fixed = styleWidth ? (styleWidth[2] === 'px' ? styleWidth : null) : tag.match(/\swidth="(\d+)"/i);
   if (fixed) return `${fixed[1]}px`;
   const own = tag.match(/\sclass="([^"]*)"/i)?.[1].split(/\s+/).find((cls) => SIZES_BY_CLASS[cls]);
   if (own) return SIZES_BY_CLASS[own];
-  const parents = [...before.matchAll(/<[a-z][^>]*\bclass="([^"]*)"/gi)];
+  // Найближчий блок з класом; сусідні <img> з довгими srcset пропускаємо, щоб не «загубити» батька
+  const parents = [...before.replace(/<img\b[^>]*>/gi, '').matchAll(/<[a-z][^>]*\bclass="([^"]*)"/gi)];
+  const classes = parents.at(-1)?.[1].split(/\s+/) || [];
+  if (classes.includes('vendor-card__media')) return vendorCardSizes(html);
+  // Галерея статті: одне фото — на всю ширину, кілька — у дві колонки
+  if (classes.includes('post-shot') && (html.match(/class="post-shot"/g) || []).length > 1) {
+    return '(min-width: 808px) 380px, 50vw';
+  }
   // Модифікатор (cat__media--grid) точніший за базовий клас, тож перевіряємо класи з кінця
-  const parent = parents.at(-1)?.[1].split(/\s+/).reverse().find((cls) => SIZES_BY_PARENT[cls]);
+  const parent = [...classes].reverse().find((cls) => SIZES_BY_PARENT[cls]);
   return parent ? SIZES_BY_PARENT[parent] : SIZES_DEFAULT;
 }
 
@@ -310,8 +327,9 @@ function useSrcset(html) {
     const set = src && responsive.get(src);
     if (!set) return tag;
     const srcset = set.map(({ ref, w }) => `${ref} ${w}w`).join(', ');
-    const sizes = sizesFor(tag, html.slice(Math.max(0, offset - 400), offset));
-    return tag.replace(/\ssrc="[^"]*"/i, ` src="${set[0].ref}" srcset="${srcset}" sizes="${sizes}"`);
+    // sizes, прописаний у розмітці вручну, не чіпаємо — його автор знає верстку краще
+    const sizes = /\ssizes=/i.test(tag) ? '' : ` sizes="${sizesFor(tag, html.slice(Math.max(0, offset - 3000), offset), html)}"`;
+    return tag.replace(/\ssrc="[^"]*"/i, ` src="${set[0].ref}" srcset="${srcset}"${sizes}`);
   });
 }
 

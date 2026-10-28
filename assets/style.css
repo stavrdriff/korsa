@@ -1177,6 +1177,19 @@ h3:where(.h4) {
 .cat__media--split img:last-child {
   clip-path: polygon(60% 0, 100% 0, 100% 100%, 40% 100%);
 }
+/* Головне фото розділу під заголовком: на ПК — половина ширини, на телефоні — уся ширина */
+.hero-photo {
+  margin: 24px auto 32px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  max-width: 50%;
+}
+@media (max-width: 780px) {
+  .hero-photo {
+    max-width: 100%;
+  }
+}
 /* Фото картки-розділу — тегом <img> з alt, під напівпрозорим шаром .vendor-card__overlay */
 .vendor-card__media > img {
   position: absolute;
