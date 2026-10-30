@@ -50,6 +50,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Відео в галереях: мишкою — грає при наведенні, дотиком — тап запускає / зупиняє.
+  // Вбудовані onmouseover/onmouseout прибираємо: на iPhone тап теж дає «наведення» і плутав би запуск.
+  document.querySelectorAll('.gallery__item video').forEach(video => {
+    const tile = video.closest('.gallery__item');
+    video.onmouseover = null;
+    video.onmouseout = null;
+    const stop = () => { video.pause(); video.currentTime = 0; };
+    tile.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') video.play(); });
+    tile.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') stop(); });
+    tile.addEventListener('pointerup', (e) => {
+      if (e.pointerType === 'mouse') return;
+      if (video.paused) video.play();
+      else video.pause();
+    });
+  });
+
   // Video cards: replace poster with native video on click
   document.querySelectorAll('.video-card').forEach(card => {
     card.addEventListener('click', () => {

@@ -11,7 +11,7 @@ import ffmpegPath from 'ffmpeg-static';
 import { transform } from 'lightningcss';
 import sharp from 'sharp';
 import { PUBLIC_DIR, ROOT, SITE_URL, UPLOADS_DIR } from '../server/config.js';
-import { decode } from '../server/html.js';
+import { decode, esc } from '../server/html.js';
 import { publishAllPages } from '../server/builder/pages.js';
 import { publishAllProducts } from '../server/builder/product.js';
 import { ensureStattiPosters } from '../server/routes/pages.js';
@@ -485,6 +485,57 @@ for (const rel of videos) {
   if (size < original.size) fs.copyFileSync(cached, file);
 }
 console.log(`→ Відео: ${videos.length} файлів, ${mb(videoBefore)} МБ → ${mb(videoAfter)} МБ`);
+
+// Прев'ю для <video> у галереях: без poster Safari на iPhone показує порожню плитку.
+// Кадр з 0.5 с у WebP; а коли прев'ю є, саме відео вантажиться лише при запуску (preload="none").
+const posters = new Map();
+async function videoPoster(ref) {
+  if (posters.has(ref)) return posters.get(ref);
+  const file = path.join(DIST, decodeURIComponent(ref));
+  const posterRef = ref.replace(/\.mp4$/i, '-poster.webp');
+  const frame = path.join(VIDEO_CACHE, `${crypto.hash('sha1', `${ref}:${fs.statSync(file).size}`)}-poster.png`);
+  if (!fs.existsSync(frame)) {
+    await execFileAsync(ffmpegPath, ['-y', '-loglevel', 'error', '-ss', '0.5', '-i', file, '-frames:v', '1', frame]);
+  }
+  fs.writeFileSync(path.join(DIST, decodeURIComponent(posterRef)), await sharp(frame).webp(WEBP_OPTIONS).toBuffer());
+  posters.set(ref, posterRef);
+  return posterRef;
+}
+
+for (const name of htmlFiles) {
+  const file = path.join(DIST, name);
+  const html = fs.readFileSync(file, 'utf8');
+  if (!/<video\b/i.test(html)) continue;
+  const parts = [];
+  const labels = new Map();
+  let last = 0;
+  for (const m of html.matchAll(/<video\b[^>]*>/gi)) {
+    const src = m[0].match(/\ssrc="([^"]+\.mp4)"/i)?.[1];
+    let tag = m[0];
+    // Назва для програм читання з екрана (alt у відео немає): найближчий заголовок вище + номер
+    if (!/\saria-label=/i.test(tag)) {
+      const heads = [...html.slice(0, m.index).matchAll(/<h[1-4]\b[^>]*>([\s\S]*?)<\/h[1-4]>/gi)];
+      const head = decode((heads.at(-1)?.[1] || '').replace(/<small\b[\s\S]*?<\/small>/gi, '').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
+      if (head) {
+        const n = (labels.get(head) || 0) + 1;
+        labels.set(head, n);
+        tag = tag.replace(/^<video\b/i, `<video aria-label="${esc(`Відео: ${head} — ${n}`)}"`);
+      }
+    }
+    if (src && !/\sposter=/i.test(tag) && fs.existsSync(path.join(DIST, decodeURIComponent(src)))) {
+      try {
+        tag = tag.replace(/^<video\b/i, `<video poster="${await videoPoster(src)}"`).replace(/\spreload="metadata"/i, ' preload="none"');
+      } catch (err) {
+        console.warn(`! Не вдалося зробити прев'ю для ${src}: ${err.message.split('\n')[0]}`);
+      }
+    }
+    parts.push(html.slice(last, m.index), tag);
+    last = m.index + m[0].length;
+  }
+  parts.push(html.slice(last));
+  fs.writeFileSync(file, parts.join(''), 'utf8');
+}
+console.log(`→ Прев'ю для відео: ${posters.size}`);
 
 let bytes = 0;
 let files = 0;
