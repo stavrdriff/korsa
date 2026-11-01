@@ -10,7 +10,7 @@ import path from 'node:path';
 import ffmpegPath from 'ffmpeg-static';
 import { transform } from 'lightningcss';
 import sharp from 'sharp';
-import { PUBLIC_DIR, ROOT, SITE_URL, UPLOADS_DIR } from '../server/config.js';
+import { PUBLIC_DIR, ROOT, SITE_NAME, SITE_URL, UPLOADS_DIR } from '../server/config.js';
 import { decode, esc } from '../server/html.js';
 import { publishAllPages } from '../server/builder/pages.js';
 import { publishAllProducts } from '../server/builder/product.js';
@@ -108,7 +108,7 @@ function seoTags(name, html) {
     const description = attr(html, /<meta name="description" content="([^"]*)"/i);
     tags.push(
       `<meta property="og:type" content="website">`,
-      `<meta property="og:site_name" content="Корса">`,
+      `<meta property="og:site_name" content="${SITE_NAME}">`,
       `<meta property="og:locale" content="uk_UA">`,
       `<meta property="og:title" content="${title}">`,
       ...(description ? [`<meta property="og:description" content="${description}">`] : []),

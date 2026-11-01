@@ -3,7 +3,7 @@ import path from 'node:path';
 import { Router } from 'express';
 import db from '../db.js';
 import { requireAuth } from '../auth.js';
-import { PUBLIC_DIR, SITE_URL, UPLOADS_DIR } from '../config.js';
+import { PUBLIC_DIR, SITE_NAME, SITE_URL, UPLOADS_DIR } from '../config.js';
 import { writePage, writeSitemap } from '../sitemap.js';
 import { decode, esc, stripScripts } from '../html.js';
 
@@ -313,7 +313,7 @@ function openGraphTags(item, lead) {
   const day = String(item.created_at || '').slice(0, 10);
   return metaTags([
     ['property', 'og:type', 'article'],
-    ['property', 'og:site_name', 'Корса'],
+    ['property', 'og:site_name', SITE_NAME],
     ['property', 'og:locale', 'uk_UA'],
     ['property', 'og:title', item.title || 'Стаття'],
     ['property', 'og:description', lead],
@@ -338,7 +338,7 @@ function withStattiOpenGraph(html, items, pageNo = 1) {
 <link rel="canonical" href="${esc(url)}">
 ${metaTags([
   ['property', 'og:type', 'website'],
-  ['property', 'og:site_name', 'Корса'],
+  ['property', 'og:site_name', SITE_NAME],
   ['property', 'og:locale', 'uk_UA'],
   ['property', 'og:title', title],
   ['property', 'og:description', desc],

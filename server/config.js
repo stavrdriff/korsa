@@ -12,6 +12,7 @@ export const DB_PATH = path.join(DATA_DIR, 'cms.sqlite');
 export const PUBLIC_DIR = path.join(ROOT, 'public');
 
 export const SITE_URL = String(process.env.SITE_URL || 'https://korsadnipro.in.ua').replace(/\/$/, '');
+export const SITE_NAME = 'Корса Дніпро';
 export const PORT = Number(process.env.PORT) || 3000;
 export const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-secret';
 export const ADMIN_USER = process.env.ADMIN_USER || 'admin';
