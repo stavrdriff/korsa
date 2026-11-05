@@ -11,3 +11,4 @@ dist/
 .env.hosting
 *~
 _reviews/
+.claude/settings.local.json
