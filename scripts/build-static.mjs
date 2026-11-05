@@ -10,10 +10,11 @@ import path from 'node:path';
 import ffmpegPath from 'ffmpeg-static';
 import { transform } from 'lightningcss';
 import sharp from 'sharp';
-import { PUBLIC_DIR, ROOT, SITE_NAME, SITE_URL, UPLOADS_DIR } from '../server/config.js';
+import { PUBLIC_DIR, ROOT, SITE_URL, UPLOADS_DIR } from '../server/config.js';
 import { decode, esc } from '../server/html.js';
 import { publishAllPages } from '../server/builder/pages.js';
 import { publishAllProducts } from '../server/builder/product.js';
+import { OG_IMAGES, seoTags } from '../server/seo.js';
 import { ensureStattiPosters } from '../server/routes/pages.js';
 
 const DIST = path.join(ROOT, 'dist');
@@ -69,60 +70,7 @@ console.log(`→ Згенеровано з бази: сторінок ${pages.le
 fs.rmSync(DIST, { recursive: true, force: true });
 fs.mkdirSync(DIST, { recursive: true });
 
-// Для пошуковиків і месенджерів: canonical, Open Graph і «хлібні крихти» (JSON-LD) на кожній сторінці.
-// Там, де сторінка вже має свої теги (статті), не дублюємо.
-const pageUrl = (name) => `${SITE_URL}/${name === 'index.html' ? '' : name}`;
-const absolute = (ref) => (/^https?:\/\//i.test(ref) ? ref : `${SITE_URL}/${ref.replace(/^\/+/, '')}`);
-const attr = (html, re) => html.match(re)?.[1] || '';
-
-/** Картинка для прев'ю: перше фото сторінки в JPG/PNG (WebP показують не всі месенджери), інакше лого */
-function previewImage(html) {
-  const main = html.slice(Math.max(0, html.search(/<main\b/i)));
-  const src = [...main.matchAll(/<img\b[^>]*\ssrc="([^"]+\.(?:jpe?g|png))"/gi)].map((m) => m[1])[0];
-  return absolute(src || 'img/logo.jpg');
-}
-
-function breadcrumbJson(name, html) {
-  const crumb = html.match(/<div class="crumb">([\s\S]*?)<\/div>/i)?.[1];
-  if (!crumb) return '';
-  const items = [...crumb.matchAll(/<a\b[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi)].map((m) => ({
-    name: decode(m[2].replace(/<[^>]+>/g, '')).trim(),
-    item: pageUrl(m[1].replace(/^\/+/, '') || 'index.html'),
-  }));
-  const current = decode(crumb.replace(/[\s\S]*<\/a>/i, '').replace(/<[^>]+>/g, '')).replace(/^[\s/]+/, '').trim();
-  if (current) items.push({ name: current, item: pageUrl(name) });
-  if (items.length < 2) return '';
-  const data = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: items.map((it, i) => ({ '@type': 'ListItem', position: i + 1, name: it.name, item: it.item })),
-  };
-  return `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
-}
-
-function seoTags(name, html) {
-  const tags = [];
-  if (!/rel="canonical"/i.test(html)) tags.push(`<link rel="canonical" href="${pageUrl(name)}">`);
-  if (!/property="og:title"/i.test(html)) {
-    const title = attr(html, /<title>([\s\S]*?)<\/title>/i).trim();
-    const description = attr(html, /<meta name="description" content="([^"]*)"/i);
-    tags.push(
-      `<meta property="og:type" content="website">`,
-      `<meta property="og:site_name" content="${SITE_NAME}">`,
-      `<meta property="og:locale" content="uk_UA">`,
-      `<meta property="og:title" content="${title}">`,
-      ...(description ? [`<meta property="og:description" content="${description}">`] : []),
-      `<meta property="og:url" content="${pageUrl(name)}">`,
-      `<meta property="og:image" content="${previewImage(html)}">`,
-      `<meta name="twitter:card" content="summary_large_image">`
-    );
-  }
-  if (!/"BreadcrumbList"/.test(html)) tags.push(breadcrumbJson(name, html));
-  const block = tags.filter(Boolean).join('\n');
-  return block ? html.replace('</head>', `${block}\n</head>`) : html;
-}
-
-const refs = new Set();
+const refs = new Set(Object.values(OG_IMAGES));
 const htmlFiles = fs.readdirSync(PUBLIC_DIR).filter((name) => name.endsWith('.html'));
 for (const name of htmlFiles) {
   const html = fs.readFileSync(path.join(PUBLIC_DIR, name), 'utf8');

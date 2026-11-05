@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import express from 'express';
 import session from 'express-session';
@@ -10,6 +11,7 @@ import {
 } from './config.js';
 import { ensureAdminUser } from './auth.js';
 import './db.js';
+import { seoTags } from './seo.js';
 
 import authRoutes from './routes/auth.js';
 import categoryRoutes from './routes/categories.js';
@@ -53,6 +55,13 @@ app.get('/admin', (_req, res) => {
 
 app.use('/assets', express.static(path.join(ROOT, 'assets')));
 app.use('/img', express.static(path.join(ROOT, 'img')));
+// Сторінки віддаємо з тими самими SEO-тегами, що й у збірці dist/
+app.get(/^\/(?:[\w-]+\.html)?$/, (req, res, next) => {
+  const name = path.basename(req.path) || 'index.html';
+  const file = path.join(PUBLIC_DIR, name);
+  if (!fs.existsSync(file)) return next();
+  res.type('html').send(seoTags(name, fs.readFileSync(file, 'utf8')));
+});
 app.use(express.static(PUBLIC_DIR, { index: 'index.html' }));
 
 writeSitemap();
