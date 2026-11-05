@@ -8,7 +8,7 @@ export default [
   js.configs.recommended,
   {
     // Сервер CMS: Node.js, ES-модулі
-    files: ['server/**/*.js', 'scripts/**/*.mjs', 'eslint.config.js'],
+    files: ['server/**/*.js', 'scripts/**/*.mjs', '.claude/skills/**/*.mjs', 'eslint.config.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

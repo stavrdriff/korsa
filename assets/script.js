@@ -21,6 +21,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const nav = document.querySelector('.nav');
   if (burger && nav) burger.addEventListener('click', () => nav.classList.toggle('open'));
 
+  // Шапка виїжджає згори слідом за скролом, коли прокрутили більше ніж на висоту екрана
+  const header = document.querySelector('.header');
+  if (header) {
+    const updateHeader = () => {
+      const scrolled = window.scrollY - window.innerHeight;
+      const revealed = scrolled > 0;
+      if (!revealed && nav) nav.classList.remove('open');
+      header.classList.toggle('header--revealed', revealed);
+      if (revealed) header.style.setProperty('--header-scrolled', `${scrolled}px`);
+    };
+    window.addEventListener('scroll', updateHeader, { passive: true });
+    updateHeader();
+  }
+
   // Highlight active nav link
   const path = location.pathname.split('/').pop() || 'index.html';
   document.querySelectorAll('.nav a').forEach(a => {
@@ -117,13 +131,13 @@ document.addEventListener('DOMContentLoaded', () => {
     lightbox.classList.remove('active');
     document.body.style.overflow = '';
   };
-  document.querySelectorAll('.gallery__item, .post-shot, .color-card').forEach((item) => {
+  document.querySelectorAll('.gallery__item, .post-shot, .color-card, .review__shot').forEach((item) => {
     item.addEventListener('click', (e) => {
       const img = item.querySelector('img');
       if (!img) return;
       e.preventDefault();
-      const group = item.closest('.post-gallery, .gallery, .colors-grid') || item.parentElement;
-      frames = [...group.querySelectorAll('.post-shot img, .gallery__item img, .color-card img')];
+      const group = item.closest('.post-gallery, .gallery, .colors-grid, .reviews') || item.parentElement;
+      frames = [...group.querySelectorAll('.post-shot img, .gallery__item img, .color-card img, .review__shot img')];
       show(Math.max(0, frames.indexOf(img)));
     });
   });

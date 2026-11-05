@@ -79,14 +79,31 @@ body {
   background-position: 0 0;
 }
 
-/* Header */
+/* Header: спершу їде вгору разом зі сторінкою, а після екрана прокрутки виїжджає згори піксель у піксель
+   зі скролом (--header-scrolled ставить script.js). Завдяки sticky шапка лишається в потоці сторінки,
+   тому контент не стрибає. --header-park має бути більшим за висоту шапки: стільки її ховає за верхнім
+   краєм екрана */
 .header {
+  --header-park: 120px;
+  --header-scrolled: 0px;
   position: sticky;
-  top: 0;
+  top: calc(-1 * var(--header-park));
   z-index: 50;
   background: rgba(255, 255, 255, 0.88);
   backdrop-filter: saturate(160%) blur(10px);
   border-bottom: 1px solid var(--line);
+}
+/* Щоб переходи за якорями не ховали заголовок під шапкою */
+html {
+  scroll-padding-top: 110px;
+}
+.header--revealed {
+  background: var(--surface);
+  backdrop-filter: none;
+  box-shadow: 0 5px 20px rgba(30, 58, 95, 0.38);
+  transform: translateY(
+    calc(var(--header-park) - 100% + min(100%, var(--header-scrolled)))
+  );
 }
 .header__inner {
   max-width: var(--max);
@@ -178,6 +195,43 @@ body {
   color: var(--text);
   font-size: 26px;
   cursor: pointer;
+}
+
+/* Між бургером і повним меню: стискаємо шапку, щоб телефон не падав на другий рядок */
+@media (min-width: 993px) and (max-width: 1120px) {
+  .header__inner {
+    gap: 16px;
+  }
+  .brand__logo {
+    width: 180px;
+    height: 51px;
+  }
+  .nav a,
+  .nav__current {
+    padding: 9px;
+  }
+  .nav a.cta-phone {
+    padding: 10px 12px;
+  }
+  .nav__list {
+    flex-wrap: nowrap;
+  }
+}
+
+/* Телефон і планшет: шапка, що виїхала, нижча. Шапка лишається в потоці сторінки, тому різницю
+   у висоті (97 − 53 = 44px) повертає margin-bottom, інакше контент стрибав би */
+@media (max-width: 992px) {
+  .header--revealed {
+    margin-bottom: 44px;
+  }
+  .header--revealed .header__inner {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  .header--revealed .brand__logo {
+    width: 141px;
+    height: 40px;
+  }
 }
 
 /* Hero */
@@ -353,6 +407,7 @@ body.has-photo-bg > * {
   z-index: 1;
 }
 body.has-photo-bg .header {
+  position: sticky;
   z-index: 50;
 }
 body.has-photo-bg > .lightbox {
@@ -937,6 +992,61 @@ h3:where(.h4) {
 }
 .cats > article > .cat {
   flex: 1;
+}
+/* Відгуки: скріншот + текст відгуку. Клік по скріншоту відкриває лайтбокс */
+.reviews {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  gap: 20px;
+  margin-top: 28px;
+}
+.review {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.review__shot {
+  display: block;
+  width: 100%;
+  height: 320px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  background: var(--surface-2);
+  cursor: zoom-in;
+}
+.review__shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.review__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px;
+}
+.review__text {
+  margin: 0;
+  color: var(--text-2);
+}
+.review__meta {
+  margin: auto 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.review__meta strong {
+  color: var(--text);
+}
+.reviews__cta {
+  margin: 28px 0 0;
+  text-align: center;
 }
 .pager {
   display: flex;
