@@ -1854,7 +1854,17 @@ body > * {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
     cursor: pointer;
+  }
+  /* Рамку фокуса лишаємо тільки для клавіатури, після натискання вона не потрібна */
+  .footer__toggle:focus:not(:focus-visible) {
+    outline: none;
+  }
+  .footer__col--accordion ul {
+    padding-left: 12px;
   }
   .footer__toggle::after {
     content: "";
@@ -1871,6 +1881,9 @@ body > * {
   }
   .footer__col--accordion:not(.is-open) ul {
     display: none;
+  }
+  .footer__col--accordion:not(.is-open) h2 {
+    margin-bottom: 0;
   }
 }
 /* Логотип — JPG на білому: множення прибирає білий прямокутник на бежевому футері */
