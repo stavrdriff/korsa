@@ -21,41 +21,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const nav = document.querySelector('.nav');
   if (burger && nav) burger.addEventListener('click', () => nav.classList.toggle('open'));
 
-  // Шапка виїжджає згори слідом за скролом, коли прокрутили більше ніж на висоту екрана.
-  // На телефоні й планшеті дотик поза нею ховає шапку (і меню), а прокрутка повертає
+  // Шапка виїжджає згори слідом за скролом, коли прокрутили більше ніж на висоту екрана
   const header = document.querySelector('.header');
   if (header) {
-    const MOBILE_HEADER_WIDTH = 992;
-    let dismissedAt = null;
     const updateHeader = () => {
-      let scrolled = window.scrollY - window.innerHeight;
+      const scrolled = window.scrollY - window.innerHeight;
       const revealed = scrolled > 0;
-      if (dismissedAt !== null) {
-        const moved = Math.abs(window.scrollY - dismissedAt);
-        if (!revealed || moved >= header.offsetHeight) dismissedAt = null;
-        else scrolled = moved;
-      }
       if (!revealed && nav) nav.classList.remove('open');
       header.classList.toggle('header--revealed', revealed);
-      header.classList.toggle('header--dismissed', dismissedAt !== null);
       if (revealed) header.style.setProperty('--header-scrolled', `${scrolled}px`);
     };
     window.addEventListener('scroll', updateHeader, { passive: true });
     window.addEventListener('resize', updateHeader, { passive: true });
+    updateHeader();
+    // Дотик поза шапкою згортає меню, сама шапка лишається.
     // pointerup, а не click: iOS не шле click із неклікабельних елементів, а прокрутка дає pointercancel
     document.addEventListener('pointerup', (e) => {
-      if (window.innerWidth > MOBILE_HEADER_WIDTH || header.contains(e.target)) return;
-      if (!header.classList.contains('header--revealed') || dismissedAt !== null) return;
-      dismissedAt = window.scrollY;
-      if (nav) nav.classList.remove('open');
-      updateHeader();
+      if (nav && !header.contains(e.target)) nav.classList.remove('open');
     });
-    updateHeader();
   }
 
   // Футер на телефоні: «Каталог» і «Сервіс» згорнуті, контакти завжди видно.
   // На ширших екранах кнопка вимкнена, а списки відкриті
+  // Відкритий завжди лише один розділ, скільки б їх не було
   const FOOTER_PHONE_WIDTH = 780;
+  const footerAccordions = [];
   document.querySelectorAll('.footer__inner > div').forEach((col) => {
     const title = col.querySelector('h2');
     if (!title || col.querySelector('a[href^="tel:"]')) return;
@@ -71,9 +61,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (phone) toggle.setAttribute('aria-expanded', String(col.classList.contains('is-open')));
       else toggle.removeAttribute('aria-expanded');
     };
+    footerAccordions.push({ col, sync });
     toggle.addEventListener('click', () => {
-      col.classList.toggle('is-open');
-      sync();
+      const opening = !col.classList.contains('is-open');
+      footerAccordions.forEach((item) => {
+        item.col.classList.toggle('is-open', opening && item.col === col);
+        item.sync();
+      });
     });
     window.addEventListener('resize', sync, { passive: true });
     sync();

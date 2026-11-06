@@ -105,11 +105,6 @@ html {
     calc(var(--header-park) - 100% + min(100%, var(--header-scrolled)))
   );
 }
-/* Сховали дотиком поза шапкою: без тіні, щоб вона не визирала згори */
-.header--revealed.header--dismissed {
-  box-shadow: none;
-  transition: transform 0.25s ease;
-}
 .header__inner {
   max-width: var(--max);
   margin: 0 auto;
