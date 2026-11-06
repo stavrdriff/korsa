@@ -35,6 +35,25 @@ document.addEventListener('DOMContentLoaded', () => {
     updateHeader();
   }
 
+  // Футер на телефоні й планшеті: «Каталог» і «Сервіс» згорнуті, контакти завжди видно
+  if (window.matchMedia('(max-width: 992px)').matches) {
+    document.querySelectorAll('.footer__inner > div').forEach((col) => {
+      const title = col.querySelector('h2');
+      if (!title || col.querySelector('a[href^="tel:"]')) return;
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'footer__toggle';
+      toggle.textContent = title.textContent;
+      toggle.setAttribute('aria-expanded', 'false');
+      title.replaceChildren(toggle);
+      col.classList.add('footer__col--accordion');
+      toggle.addEventListener('click', () => {
+        const open = col.classList.toggle('is-open');
+        toggle.setAttribute('aria-expanded', String(open));
+      });
+    });
+  }
+
   // Highlight active nav link
   const path = location.pathname.split('/').pop() || 'index.html';
   document.querySelectorAll('.nav a').forEach(a => {
