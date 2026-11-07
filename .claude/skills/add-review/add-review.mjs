@@ -2,9 +2,10 @@
 // Нові відгуки стають першими. Сайт після цього треба перезібрати: npm run build
 //
 //   node .claude/skills/add-review/add-review.mjs --image шлях.png --text "Текст" \
-//     [--name Ім'я] [--city Дніпро] [--product "вікна REHAU"] [--mask x,y,ширина,висота]
+//     [--name Ім'я] [--city Дніпро] [--product "вікна REHAU"] [--blur x,y,ширина,висота] [--mask x,y,ширина,висота]
 //
-// --mask (можна кілька разів) закриває суцільним прямокутником імена, аватарки й телефони на копії.
+// --blur (можна кілька разів) розмиває область: аватарки, прізвища, телефони на копії.
+// --mask (можна кілька разів) закриває область суцільним прямокутником.
 import fs from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
@@ -21,12 +22,15 @@ const { values: args } = parseArgs({
     city: { type: 'string', default: '' },
     product: { type: 'string', default: '' },
     mask: { type: 'string', multiple: true, default: [] },
+    blur: { type: 'string', multiple: true, default: [] },
   },
 });
 
 const IMAGE_DIR = path.join(ROOT, 'img', 'reviews');
 const LIST_START = '<div class="reviews" id="reviews">\n';
 const MASK_COLOR = '#cfd4da';
+// Розмиття має бути таким, щоб літери й обличчя не вгадувались навіть на збільшеному скріні
+const BLUR_SIGMA = 18;
 
 function fail(message) {
   console.error(`✗ ${message}`);
@@ -40,23 +44,33 @@ function nextImageName(ext) {
   return `review-${next}${ext}`;
 }
 
-function parseMask(value) {
+/** «x,y,ширина,висота» → область, обрізана по краях зображення */
+function parseRegion(flag, value, meta) {
   const [left, top, width, height] = value.split(',').map(Number);
   if (![left, top, width, height].every(Number.isInteger) || width <= 0 || height <= 0) {
-    fail(`--mask ${value}: потрібно x,y,ширина,висота в пікселях`);
+    fail(`--${flag} ${value}: потрібно x,y,ширина,висота в пікселях`);
   }
-  return { left, top, width, height };
+  const x = Math.max(0, left);
+  const y = Math.max(0, top);
+  const w = Math.min(width - (x - left), meta.width - x);
+  const h = Math.min(height - (y - top), meta.height - y);
+  if (w <= 0 || h <= 0) fail(`--${flag} ${value}: область поза зображенням`);
+  return { left: x, top: y, width: w, height: h };
 }
 
 async function saveImage(from, to, meta) {
-  const overlays = args.mask.map(parseMask).map(({ left, top, width, height }) => {
-    const x = Math.max(0, left);
-    const y = Math.max(0, top);
-    const w = Math.min(width - (x - left), meta.width - x);
-    const h = Math.min(height - (y - top), meta.height - y);
-    if (w <= 0 || h <= 0) fail(`--mask ${left},${top},${width},${height}: область поза зображенням`);
-    return { input: { create: { width: w, height: h, channels: 3, background: MASK_COLOR } }, left: x, top: y };
+  const masks = args.mask.map((value) => {
+    const { left, top, width, height } = parseRegion('mask', value, meta);
+    return { input: { create: { width, height, channels: 3, background: MASK_COLOR } }, left, top };
   });
+  const blurs = await Promise.all(
+    args.blur.map(async (value) => {
+      const region = parseRegion('blur', value, meta);
+      const input = await sharp(from).extract(region).blur(BLUR_SIGMA).toBuffer();
+      return { input, left: region.left, top: region.top };
+    })
+  );
+  const overlays = [...blurs, ...masks];
   if (overlays.length) await sharp(from).composite(overlays).toFile(to);
   else fs.copyFileSync(from, to);
 }
