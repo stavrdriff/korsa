@@ -1012,8 +1012,10 @@ h3:where(.h4) {
 }
 .review__shot {
   display: block;
+  /* Скріншот забирає вільне місце картки, якщо в сусідніх у ряду текст довший */
+  flex: 1 0 320px;
   width: 100%;
-  height: 320px;
+  min-height: 320px;
   padding: 0;
   border: 0;
   overflow: hidden;
@@ -1027,7 +1029,7 @@ h3:where(.h4) {
 }
 .review__body {
   display: flex;
-  flex: 1;
+  flex: none;
   flex-direction: column;
   gap: 12px;
   padding: 18px 20px;
@@ -1035,6 +1037,8 @@ h3:where(.h4) {
 .review__text {
   margin: 0;
   color: var(--text-2);
+  /* Клієнти пишуть і без пробілів («Валя.дякую.за.роботу») — переносимо всередині слова */
+  overflow-wrap: anywhere;
 }
 .review__meta {
   margin: auto 0 0;
@@ -2232,9 +2236,6 @@ body > * {
     display: block;
     margin: auto 0 auto auto;
   }
-  .cats {
-    grid-template-columns: 1fr;
-  }
   .stats {
     grid-template-columns: 1fr 1fr;
   }
@@ -2256,5 +2257,12 @@ body > * {
   }
   .gallery--collapsed .gallery__item:nth-child(n + 9) {
     display: none;
+  }
+}
+
+/* Картки статей і категорій: дві в ряд на планшеті, одна — лише на вузьких телефонах */
+@media (max-width: 640px) {
+  .cats {
+    grid-template-columns: 1fr;
   }
 }
