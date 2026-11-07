@@ -7,6 +7,14 @@
     "hash": "1eb4c9ccc2dbac24d1478ca44144f0a2ea9f7635",
     "date": "2026-11-06"
   },
+  "alyuminii-metaloplastyk.html": {
+    "hash": "05da2bd415e81aa9ae5d8bb013334b88d6ac2e96",
+    "date": "2026-11-07"
+  },
+  "armuvannya-profilyu.html": {
+    "hash": "14b82b36e16ee98e63292c6b6d0466c24b9aa421",
+    "date": "2026-11-07"
+  },
   "avtomatyka-zovnishnia.html": {
     "hash": "ec0d06ebff7d11eb4e339232420e4e8ce664793b",
     "date": "2026-11-06"
@@ -35,9 +43,21 @@
     "hash": "efbcd588d721ae5a0714f902f649878c099dcb22",
     "date": "2026-11-06"
   },
+  "drenazhni-otvory-vikon.html": {
+    "hash": "1dc8d1e25adac4b5d8aef3fa52eef3d52d9fd8ed",
+    "date": "2026-11-07"
+  },
   "dveri.html": {
     "hash": "e2e71e0715479bc6be049785bad2a02d90c56216",
     "date": "2026-11-06"
+  },
+  "ekonomiya-na-viknakh.html": {
+    "hash": "81d4ac1164a10133cb4e93398f64907bc0d5978c",
+    "date": "2026-11-07"
+  },
+  "laminovani-vikna.html": {
+    "hash": "faf64be674bd6fe67bdd9e022fcce4aaa5124c24",
+    "date": "2026-11-07"
   },
   "markiza-canopy.html": {
     "hash": "4706cad0f46cb1bbba550d20e742d49ef07a3ad2",
@@ -87,6 +107,10 @@
     "hash": "df487bcec7c5da6681cd14a6cea04b394d8e5ec7",
     "date": "2026-11-06"
   },
+  "perevirka-armuvannya-vikna.html": {
+    "hash": "bef9f662303c27bebea3d453436976a8ee52f28a",
+    "date": "2026-11-07"
+  },
   "pergola-space-light.html": {
     "hash": "5906f550b5be1b5debea25313069f237779ef47d",
     "date": "2026-11-06"
@@ -102,6 +126,10 @@
   "pergoly.html": {
     "hash": "2b0561bcfd52c24f40497c90d869b9f6774e2a67",
     "date": "2026-11-06"
+  },
+  "pidhotovka-do-zymy.html": {
+    "hash": "7f5099c9891cf67376fe05c01cbcb92b5ef200da",
+    "date": "2026-11-07"
   },
   "plisse-ab-81-vegas.html": {
     "hash": "714118103c7c521b010fda9afd3177142e74b6b6",
@@ -211,6 +239,10 @@
     "hash": "46900ec3739df040fa3c81649344876440bc3af9",
     "date": "2026-11-06"
   },
+  "porivnyannya-tsin-vikon.html": {
+    "hash": "9cd170d5fba64ef77fcd9baf7cf878cfc65aee17",
+    "date": "2026-11-07"
+  },
   "prykhovani-dveri.html": {
     "hash": "48acdd87d447ebef9dd45fec868d343a4860a373",
     "date": "2026-11-06"
@@ -272,44 +304,16 @@
     "date": "2026-11-06"
   },
   "statti.html": {
-    "hash": "4e85008c7ddd87e01806795b7f641305728d8c69",
-    "date": "2026-11-06"
-  },
-  "stattia-alyuminii-metaloplastyk.html": {
-    "hash": "9a13ed6e5e1d0cb563aa17220d409f86242bd4a7",
-    "date": "2026-11-06"
-  },
-  "stattia-armuvannya-profilyu.html": {
-    "hash": "1a0b7ff43320931911bc15ae63569defcbb9763f",
-    "date": "2026-11-06"
-  },
-  "stattia-drenazhni-otvory-vikon.html": {
-    "hash": "8b5351be58a8619d650459e1a20b3f291fabebea",
-    "date": "2026-11-06"
-  },
-  "stattia-ekonomiya-na-viknakh.html": {
-    "hash": "67800371f716275c419a7ed114878a0f7cd9e5c7",
-    "date": "2026-11-06"
-  },
-  "stattia-laminovani-vikna.html": {
-    "hash": "727247666637bb18d64eb87552133e3a9c39aa86",
-    "date": "2026-11-06"
-  },
-  "stattia-perevirka-armuvannya-vikna.html": {
-    "hash": "1c542757dc72003b56d25f01f8eda97ab3cd8099",
-    "date": "2026-11-06"
-  },
-  "stattia-pidhotovka-do-zymy.html": {
-    "hash": "9aa453cc705969fc756801c662b093813c68cbaf",
-    "date": "2026-11-06"
-  },
-  "stattia-porivnyannya-tsin-vikon.html": {
-    "hash": "cb571aae2117a4695a8f8e3ce588505ba2029b14",
-    "date": "2026-11-06"
+    "hash": "c588bb8ddc1a51121e956a4b4b62c04e433b6468",
+    "date": "2026-11-07"
   },
   "tkanini-zovnishni.html": {
     "hash": "9964f56338b8dabd4996a6ad85e34595227bb0fa",
     "date": "2026-11-06"
+  },
+  "tkanynni-rolety-vzymku.html": {
+    "hash": "4f58e286b382f503ce0c731ce5fd796d2eef1cae",
+    "date": "2026-11-07"
   },
   "vhidni-dveri.html": {
     "hash": "e15a9e08bd9da498d57951e0fd6d54acac0d7634",

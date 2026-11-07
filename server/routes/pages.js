@@ -201,18 +201,26 @@ function makeSlug(title, used) {
   base ||= 'material';
   let slug = base;
   let n = 2;
-  while (used.has(slug)) slug = `${base}-${n++}`;
+  while (used.has(slug) || STATTI_LIST_SLUG.test(slug)) slug = `${base}-${n++}`;
   used.add(slug);
   return slug;
 }
 
+/** Статті лежать у корені сайту, тож їхні адреси не мають збігатися зі сторінками й товарами */
+const STATTI_LIST_SLUG = /^statti-\d+$/;
+
+function reservedSlugs() {
+  const rows = db.prepare(`SELECT slug FROM pages UNION SELECT slug FROM products`).all();
+  return new Set(rows.map((row) => row.slug));
+}
+
 function assignPostSlugs(items, prevById) {
-  const used = new Set();
+  const used = reservedSlugs();
   return (items || []).map((item) => {
     if (item.kind !== 'post') return item;
     const prev = prevById.get(Number(item.id));
-    let slug = /^[a-z0-9-]+$/.test(prev?.slug || '') ? prev.slug : '';
-    if (!slug && /^[a-z0-9-]+$/.test(item.slug || '') && !used.has(item.slug)) slug = item.slug;
+    let slug = /^[a-z0-9-]+$/.test(prev?.slug || '') && !STATTI_LIST_SLUG.test(prev.slug) ? prev.slug : '';
+    if (!slug && /^[a-z0-9-]+$/.test(item.slug || '') && !STATTI_LIST_SLUG.test(item.slug) && !used.has(item.slug)) slug = item.slug;
     if (slug && used.has(slug)) slug = '';
     if (!slug) slug = makeSlug(item.title, used);
     else used.add(slug);
@@ -220,8 +228,14 @@ function assignPostSlugs(items, prevById) {
   });
 }
 
+/** Адреса статті — лише короткий slug, без слова «стаття»: drenazhni-otvory-vikon.html */
 function articleFile(slug) {
-  return `stattia-${slug}.html`;
+  return `${slug}.html`;
+}
+
+/** Сторінку статті впізнаємо за розміткою — префікса в імені файлу більше немає */
+function isArticleHtml(html) {
+  return html.includes('<div class="section__inner post-read">');
 }
 
 /** Скільки карток матеріалів на одній сторінці списку */
@@ -412,9 +426,9 @@ function writeArticlePages(shell, items) {
     writePage(path.join(PUBLIC_DIR, name), renderArticlePage(shell, item));
   }
   for (const name of fs.readdirSync(PUBLIC_DIR)) {
-    if (/^stattia-[a-z0-9-]+\.html$/.test(name) && !keep.has(name)) {
-      fs.unlinkSync(path.join(PUBLIC_DIR, name));
-    }
+    if (!/^[a-z0-9-]+\.html$/.test(name) || keep.has(name)) continue;
+    const file = path.join(PUBLIC_DIR, name);
+    if (name.startsWith('stattia-') || isArticleHtml(fs.readFileSync(file, 'utf8'))) fs.unlinkSync(file);
   }
   writeSitemap();
 }
@@ -594,7 +608,7 @@ router.get('/links', (_req, res) => {
       const raw = html.match(/<title>([\s\S]*?)<\/title>/i)?.[1] || '';
       const title = decode(raw).replace(/\s*\|\s*Корса\s*$/i, '').trim() || name;
       const known = meta.get(name);
-      const parent = known?.parent || (name.startsWith('stattia-') ? 'statti.html' : name === 'index.html' ? '' : 'index.html');
+      const parent = known?.parent || (isArticleHtml(html) ? 'statti.html' : name === 'index.html' ? '' : 'index.html');
       return { href: name, title, parent, order: known?.order ?? 0 };
     })
     .sort((a, b) => a.title.localeCompare(b.title, 'uk'));
