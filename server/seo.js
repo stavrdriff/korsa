@@ -1,5 +1,8 @@
-import { SITE_NAME, SITE_URL } from './config.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import { ROOT, SITE_NAME, SITE_URL } from './config.js';
 import { decode } from './html.js';
+import { OG_HEIGHT, OG_WIDTH, ogFile } from './og-image.js';
 
 // Для пошуковиків і месенджерів: canonical, Open Graph і «хлібні крихти» (JSON-LD) на кожній сторінці.
 // Там, де сторінка вже має свої теги (статті), не дублюємо.
@@ -7,8 +10,23 @@ const pageUrl = (name) => `${SITE_URL}/${name === 'index.html' ? '' : name}`;
 const absolute = (ref) => (/^https?:\/\//i.test(ref) ? ref : `${SITE_URL}/${ref.replace(/^\/+/, '')}`);
 const attr = (html, re) => html.match(re)?.[1] || '';
 
-// Окрема картинка для прев'ю в месенджерах: JPG 1200×630, інакше береться перше фото сторінки
-export const OG_IMAGES = { 'index.html': 'img/og-home.jpg' };
+// Готові картинки для прев'ю (JPG 1200×630). Решта сторінок — img/og/<сторінка>.jpg (server/og-image.js),
+// а якщо її ще немає — перше фото сторінки
+export const OG_IMAGES = { 'index.html': 'img/og-home.jpg', 'vidhuky.html': 'img/og-home.jpg', 'contacts.html': 'img/og-home.jpg' };
+
+/** Картинка прев'ю 1200×630 для сторінки, якщо вона є */
+export function ogImageFor(name) {
+  if (OG_IMAGES[name]) return OG_IMAGES[name];
+  const file = ogFile(name);
+  return fs.existsSync(path.join(ROOT, file)) ? file : '';
+}
+
+/** Розмір наперед — Facebook і LinkedIn тоді показують велике прев'ю вже з першого поширення */
+const ogSizeTags = () => [
+  `<meta property="og:image:type" content="image/jpeg">`,
+  `<meta property="og:image:width" content="${OG_WIDTH}">`,
+  `<meta property="og:image:height" content="${OG_HEIGHT}">`,
+];
 
 /** Картинка для прев'ю: перше фото сторінки в JPG/PNG (WebP показують не всі месенджери), інакше лого */
 function previewImage(html) {
@@ -35,9 +53,18 @@ function breadcrumbJson(name, html) {
   return `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
 }
 
-export function seoTags(name, html) {
+export function seoTags(name, source) {
+  let html = source;
   const tags = [];
+  const ogImage = ogImageFor(name);
   if (!/rel="canonical"/i.test(html)) tags.push(`<link rel="canonical" href="${pageUrl(name)}">`);
+  if (/property="og:title"/i.test(html) && ogImage) {
+    // Сторінка має свої теги (статті, список статей) — міняємо лише картинку
+    html = html.replace(
+      /<meta property="og:image" content="[^"]*">/i,
+      `<meta property="og:image" content="${absolute(ogImage)}">\n${ogSizeTags().join('\n')}`
+    );
+  }
   if (!/property="og:title"/i.test(html)) {
     const title = attr(html, /<title>([\s\S]*?)<\/title>/i).trim();
     const description = attr(html, /<meta name="description" content="([^"]*)"/i);
@@ -48,7 +75,8 @@ export function seoTags(name, html) {
       `<meta property="og:title" content="${title}">`,
       ...(description ? [`<meta property="og:description" content="${description}">`] : []),
       `<meta property="og:url" content="${pageUrl(name)}">`,
-      `<meta property="og:image" content="${OG_IMAGES[name] ? absolute(OG_IMAGES[name]) : previewImage(html)}">`,
+      `<meta property="og:image" content="${ogImage ? absolute(ogImage) : previewImage(html)}">`,
+      ...(ogImage ? [...ogSizeTags(), `<meta property="og:image:alt" content="${title}">`] : []),
       `<meta name="twitter:card" content="summary_large_image">`
     );
   }

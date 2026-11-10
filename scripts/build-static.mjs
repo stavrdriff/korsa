@@ -14,7 +14,8 @@ import { PUBLIC_DIR, ROOT, SITE_URL, UPLOADS_DIR } from '../server/config.js';
 import { decode, esc } from '../server/html.js';
 import { publishAllPages } from '../server/builder/pages.js';
 import { publishAllProducts } from '../server/builder/product.js';
-import { OG_IMAGES, seoTags } from '../server/seo.js';
+import { ensureOgImages } from '../server/og-image.js';
+import { OG_IMAGES, ogImageFor, seoTags } from '../server/seo.js';
 import { ensureStattiPosters } from '../server/routes/pages.js';
 
 const DIST = path.join(ROOT, 'dist');
@@ -67,6 +68,11 @@ const pages = publishAllPages();
 const products = publishAllProducts().filter((p) => !p.skipped);
 console.log(`→ Згенеровано з бази: сторінок ${pages.length}, товарів ${products.length}`);
 
+// Прев'ю для соцмереж у стилі головної — лише для сторінок, у яких його ще немає
+const og = await ensureOgImages(Object.keys(OG_IMAGES));
+if (og.made.length) console.log(`→ Прев'ю для соцмереж: нових ${og.made.length}`);
+if (og.failed.length) console.log(`! Без прев'ю (немає придатних фото): ${og.failed.join(', ')}`);
+
 fs.rmSync(DIST, { recursive: true, force: true });
 fs.mkdirSync(DIST, { recursive: true });
 
@@ -74,6 +80,8 @@ const refs = new Set(Object.values(OG_IMAGES));
 const htmlFiles = fs.readdirSync(PUBLIC_DIR).filter((name) => name.endsWith('.html'));
 for (const name of htmlFiles) {
   const html = fs.readFileSync(path.join(PUBLIC_DIR, name), 'utf8');
+  const ogImage = ogImageFor(name);
+  if (ogImage) refs.add(ogImage);
   fs.writeFileSync(path.join(DIST, name), seoTags(name, rewriteRefs(html, refs)), 'utf8');
 }
 
