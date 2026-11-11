@@ -7,6 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
+import db from './db.js';
 import { PUBLIC_DIR, ROOT, UPLOADS_DIR } from './config.js';
 
 export const OG_DIR = path.join(ROOT, 'img', 'og');
@@ -25,6 +26,11 @@ const NARROW_RATIO = 0.6;
 const NARROW_MIN = { width: 160, height: 380 };
 const MAX_NARROW = 5;
 const FETCH_TIMEOUT = 15000;
+
+// Фото, вибрані для прев'ю в адмінці (поле «Фото для прев'ю» у статті), — page_items.og_photos.
+// Що з чого зібрано, пам'ятає img/og/sources.json: змінили фото — прев'ю перегенерується.
+const SOURCES_FILE = path.join(OG_DIR, 'sources.json');
+export const OG_MAX_CHOSEN = MAX_PHOTOS;
 
 /** Файл прев'ю для сторінки (відносно кореня сайту) */
 export const ogFile = (name) => `img/og/${name.replace(/\.html$/, '')}.jpg`;
@@ -89,47 +95,101 @@ async function logoPlate() {
     .toBuffer();
 }
 
-/** Збирає прев'ю: фото смугами на всю висоту + лого по центру */
-async function compose(photos, out) {
+/**
+ * Збирає прев'ю 1200×630 (JPEG): фото смугами на всю висоту + лого по центру.
+ * position — як sharp обрізає фото під смугу: 'attention' шукає найцікавіше, 'centre' — середина.
+ */
+export async function composeOgImage(photos, position = 'attention') {
   const count = photos.length;
   const panel = Math.floor((OG_WIDTH - GAP * (count - 1)) / count);
   const panels = await Promise.all(
     photos.map(async (buf, i) => ({
-      input: await sharp(buf).rotate().resize(panel, OG_HEIGHT, { fit: 'cover', position: 'attention' }).toBuffer(),
+      input: await sharp(buf)
+        .rotate()
+        .flatten({ background: '#ffffff' })
+        .resize(panel, OG_HEIGHT, { fit: 'cover', position })
+        .toBuffer(),
       left: i * (panel + GAP),
       top: 0,
     }))
   );
   const plate = await logoPlate();
-  fs.mkdirSync(path.dirname(out), { recursive: true });
-  await sharp({ create: { width: OG_WIDTH, height: OG_HEIGHT, channels: 3, background: GAP_COLOR } })
-    .composite([
-      ...panels,
-      { input: plate, left: (OG_WIDTH - PLATE.width) / 2, top: (OG_HEIGHT - PLATE.height) / 2 },
-    ])
+  return sharp({ create: { width: OG_WIDTH, height: OG_HEIGHT, channels: 3, background: GAP_COLOR } })
+    .composite([...panels, { input: plate, left: (OG_WIDTH - PLATE.width) / 2, top: (OG_HEIGHT - PLATE.height) / 2 }])
     .jpeg({ quality: 84, mozjpeg: true })
-    .toFile(out);
+    .toBuffer();
+}
+
+/** Вибрані фото → придатні картинки (биті й недоступні пропускаємо) */
+export async function loadChosenPhotos(refs) {
+  const bufs = await Promise.all(refs.slice(0, OG_MAX_CHOSEN).map(loadPhoto));
+  const ok = [];
+  for (const buf of bufs) {
+    if (!buf) continue;
+    try {
+      await sharp(buf).metadata();
+      ok.push(buf);
+    } catch {
+      // не картинка
+    }
+  }
+  return ok;
+}
+
+/** Фото, вибрані в адмінці для статей: { slug: [адреси] } */
+function chosenPhotos() {
+  const rows = db.prepare(`SELECT slug, og_photos FROM page_items WHERE kind = 'post' AND slug != ''`).all();
+  const map = {};
+  for (const row of rows) {
+    try {
+      const list = JSON.parse(row.og_photos || '[]');
+      if (Array.isArray(list) && list.length) map[row.slug] = list.map(String).filter(Boolean);
+    } catch {
+      // порожнє або зіпсоване поле — як не вибрано
+    }
+  }
+  return map;
+}
+
+function readSources() {
+  try {
+    return JSON.parse(fs.readFileSync(SOURCES_FILE, 'utf8'));
+  } catch {
+    return {};
+  }
 }
 
 /**
- * Створює відсутні прев'ю для сторінок з public/.
+ * Створює прев'ю для сторінок з public/: відсутні, а також ті, де в адмінці змінили вибрані фото.
  * skip — сторінки з власною готовою картинкою (головна тощо).
  * Повертає { made, failed }: failed — сторінки без жодного придатного фото.
  */
 export async function ensureOgImages(skip = []) {
   const made = [];
   const failed = [];
+  const chosen = chosenPhotos();
+  const sources = readSources();
   const names = fs.readdirSync(PUBLIC_DIR).filter((name) => /^[a-z0-9-]+\.html$/.test(name) && !skip.includes(name));
   for (const name of names) {
+    const key = name.replace(/\.html$/, '');
     const out = path.join(ROOT, ogFile(name));
-    if (fs.existsSync(out)) continue;
-    const photos = await pickPhotos(fs.readFileSync(path.join(PUBLIC_DIR, name), 'utf8'));
+    // Підпис джерела: список вибраних фото або «auto» — фото зі сторінки
+    const signature = chosen[key] ? chosen[key].join('\n') : 'auto';
+    if (fs.existsSync(out) && (sources[key] || 'auto') === signature) continue;
+    const photos = chosen[key]
+      ? await loadChosenPhotos(chosen[key])
+      : await pickPhotos(fs.readFileSync(path.join(PUBLIC_DIR, name), 'utf8'));
     if (!photos.length) {
       failed.push(name);
       continue;
     }
-    await compose(photos, out);
+    fs.mkdirSync(OG_DIR, { recursive: true });
+    // Вибрані вручну фото обрізаємо по центру — людина вже обрала, що показати
+    fs.writeFileSync(out, await composeOgImage(photos, chosen[key] ? 'centre' : 'attention'));
+    if (signature === 'auto') delete sources[key];
+    else sources[key] = signature;
     made.push(name);
   }
+  fs.writeFileSync(SOURCES_FILE, `${JSON.stringify(sources, null, 2)}\n`);
   return { made, failed };
 }

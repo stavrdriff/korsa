@@ -1791,9 +1791,19 @@ function addPostCard(item = {}, prepend = false, open = false) {
         <button type="button" class="btn btn-ghost" data-add-video>+ Відео</button>
       </div>
       <div data-videos></div>
+      <div class="post-media-head">
+        <label>Фото для прев'ю в соцмережах</label>
+        <button type="button" class="btn btn-ghost" data-add-og>+ Фото</button>
+      </div>
+      <p class="post-og__hint">До 3 фото — у Viber, Telegram чи Facebook вони стануть смугами з лого Корси посередині. Порожньо — візьметься фото зі статті.</p>
+      <div data-og></div>
+      <div class="post-og">
+        <button type="button" class="btn btn-ghost" data-og-preview>Показати прев'ю</button>
+        <img class="post-og__image hidden" alt="Прев'ю для соцмереж">
+      </div>
       <div class="post-card__actions">
         <button type="button" class="btn" data-save>Зберегти</button>
-        <a class="btn btn-ghost${item.slug ? '' : ' is-disabled'}" data-open target="_blank" rel="noopener" href="${item.slug ? `/stattia-${escapeAttr(item.slug)}.html` : '#'}">Відкрити сторінку</a>
+        <a class="btn btn-ghost${item.slug ? '' : ' is-disabled'}" data-open target="_blank" rel="noopener" href="${item.slug ? `/${escapeAttr(item.slug)}.html` : '#'}">Відкрити сторінку</a>
         <button type="button" class="btn btn-danger" data-remove>Прибрати</button>
       </div>
     </div>
@@ -1840,6 +1850,13 @@ function addPostCard(item = {}, prepend = false, open = false) {
   videos.forEach((url) => addPostVideo(videoBox, url));
   card.querySelector('[data-add-photo]').addEventListener('click', () => addPostPhoto(photoBox));
   card.querySelector('[data-add-video]').addEventListener('click', () => addPostVideo(videoBox));
+  const ogBox = card.querySelector('[data-og]');
+  (item.og_photos || []).forEach((src) => addOgPhoto(ogBox, src));
+  card.querySelector('[data-add-og]').addEventListener('click', () => {
+    if (ogBox.children.length >= OG_MAX_PHOTOS) showFlash(`Для прев'ю — не більше ${OG_MAX_PHOTOS} фото`, false);
+    else addOgPhoto(ogBox);
+  });
+  card.querySelector('[data-og-preview]').addEventListener('click', () => showOgPreview(card));
   const list = document.getElementById('postsList');
   if (prepend) list.prepend(card);
   else list.append(card);
@@ -1934,6 +1951,94 @@ function addPostVideo(box, url = '') {
   box.append(wrap);
 }
 
+const OG_MAX_PHOTOS = 3;
+
+function readOgPhotos(card) {
+  return [...card.querySelectorAll('[data-field="og"]')].map((el) => el.value.trim()).filter(Boolean);
+}
+
+/** Рядок «фото для прев'ю»: посилання (з каталогу чи будь-яке) або завантажене фото */
+function addOgPhoto(box, src = '') {
+  const wrap = document.createElement('div');
+  wrap.className = 'post-photo';
+  const preview = document.createElement('img');
+  preview.className = 'post-card__preview';
+  preview.alt = '';
+  const input = document.createElement('input');
+  input.dataset.field = 'og';
+  input.placeholder = 'Посилання на фото, напр. img/covers/shtory.jpg';
+  input.value = src;
+  const sync = () => {
+    const shown = mediaSrc(input.value);
+    preview.src = shown;
+    preview.classList.toggle('hidden', !shown);
+  };
+  input.addEventListener('input', sync);
+  sync();
+  const row = document.createElement('div');
+  row.className = 'photo-row';
+  const file = document.createElement('input');
+  file.type = 'file';
+  file.accept = 'image/*';
+  file.hidden = true;
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'btn btn-ghost';
+  button.textContent = 'Завантажити';
+  button.addEventListener('click', () => file.click());
+  file.addEventListener('change', async () => {
+    const chosen = file.files?.[0];
+    file.value = '';
+    if (!chosen) return;
+    try {
+      input.value = await uploadImageFile(chosen);
+      sync();
+      showFlash('Фото завантажено');
+    } catch (err) {
+      showFlash(err.message, false);
+    }
+  });
+  row.append(input, button, file);
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.className = 'btn btn-danger';
+  remove.textContent = 'Прибрати';
+  remove.addEventListener('click', () => wrap.remove());
+  wrap.append(preview, row, remove);
+  box.append(wrap);
+}
+
+/** Збирає прев'ю на сервері тим самим кодом, що й під час збірки сайту */
+async function showOgPreview(card) {
+  const photos = readOgPhotos(card);
+  if (!photos.length) {
+    showFlash('Додайте хоча б одне фото для прев\'ю', false);
+    return;
+  }
+  const failed = 'Не вдалося зібрати прев\'ю';
+  let res;
+  try {
+    res = await fetch('/api/media/og-preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ photos }),
+      credentials: 'same-origin',
+    });
+  } catch {
+    showFlash(failed, false);
+    return;
+  }
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    showFlash(data.error || failed, false);
+    return;
+  }
+  const image = card.querySelector('.post-og__image');
+  if (image.src.startsWith('blob:')) URL.revokeObjectURL(image.src);
+  image.src = URL.createObjectURL(await res.blob());
+  image.classList.remove('hidden');
+}
+
 function collectPosts() {
   return [...document.querySelectorAll('#postsList .post-card')].map((card, i) => {
     const field = (name) => card.querySelector(`[data-field="${name}"]`);
@@ -1951,6 +2056,7 @@ function collectPosts() {
       body: card._readBody ? card._readBody() : '',
       photos,
       videos,
+      og_photos: readOgPhotos(card).slice(0, OG_MAX_PHOTOS),
       href: videos[0] || '',
       slug: card.dataset.slug || '',
       image: picked && photos.includes(picked) ? picked : photos[0] || '',

@@ -159,5 +159,7 @@ addColumn('page_items', 'body', "TEXT DEFAULT ''");
 addColumn('page_items', 'slug', "TEXT DEFAULT ''");
 addColumn('page_items', 'photos', "TEXT DEFAULT ''");
 addColumn('page_items', 'videos', "TEXT DEFAULT ''");
+// Фото для прев'ю в соцмережах (JSON-масив, до 3) — server/og-image.js
+addColumn('page_items', 'og_photos', "TEXT DEFAULT ''");
 
 export default db;
