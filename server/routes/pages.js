@@ -6,7 +6,7 @@ import { requireAuth } from '../auth.js';
 import { PUBLIC_DIR, SITE_NAME, SITE_URL, UPLOADS_DIR } from '../config.js';
 import { writePage, writeSitemap } from '../sitemap.js';
 import { decode, esc, stripScripts } from '../html.js';
-import { OG_MAX_CHOSEN } from '../og-image.js';
+import { OG_MAX_CHOSEN, cardImageFor, ensureCardImages } from '../og-image.js';
 
 const router = Router();
 
@@ -385,6 +385,8 @@ function renderArticlePage(shell, item) {
   const gallery = photos
     .map((src) => `<button type="button" class="post-shot"><img src="${esc(src)}" alt="${esc(item.title || '')}"></button>`)
     .join('\n');
+  // Без власних фото — зверху ті самі фото, що й у картці списку (смугами, без лого)
+  const cover = gallery ? '' : cardImageFor({ ...item, og_photos: ogPhotos(item) });
   const players = videos
     .map((url) => videoPlayer(url, item.title))
     .filter(Boolean)
@@ -409,6 +411,7 @@ ${header}
     <h1>${esc(item.title || '')}</h1>
     ${added ? `<p class="post-date"><time datetime="${esc(String(item.created_at).slice(0, 10))}">${esc(added)}</time></p>` : ''}
     <article>
+      ${cover ? `<img class="post-cover" src="${esc(cover)}" alt="${esc(item.title || '')}" width="800" height="500">` : ''}
       ${gallery ? `<div class="post-gallery">\n${gallery}\n</div>` : ''}
       ${body ? `<div class="post-html">${body}</div>` : ''}
       ${players}
@@ -484,7 +487,8 @@ function renderStattiPosts(html, items, pageNo = 1) {
     .slice((pageNo - 1) * POSTS_PER_PAGE, pageNo * POSTS_PER_PAGE)
     .map((item) => {
       const videos = postVideos(item);
-      const image = coverPhoto(item) || (videos[0] ? videoPoster(videos[0]) : '');
+      // Вибрані фото для прев'ю (без лого) — замість кадру відео з кнопкою ▶
+      const image = cardImageFor({ ...item, og_photos: ogPhotos(item) }) || coverPhoto(item) || (videos[0] ? videoPoster(videos[0]) : '');
       const label = item.group_label === 'video' || videos.length ? 'Відео' : 'Стаття';
       const media = image
         ? `<img src="${esc(image)}" alt="${esc(item.title || '')}">`
@@ -554,10 +558,13 @@ function replaceUnique(html, from, to) {
   return parts.join(to);
 }
 
-/** Докачати прев'ю Instagram для збережених статей (перед publishArticlePages) */
+/** Докачати прев'ю Instagram і зібрати картинки карток для збережених статей (перед publishArticlePages) */
 export async function ensureStattiPosters() {
   const page = db.prepare(`SELECT id FROM pages WHERE slug = 'statti'`).get();
-  if (page) await ensureInstagramPosters(loadItems(page.id));
+  if (!page) return;
+  const items = loadItems(page.id);
+  await ensureInstagramPosters(items);
+  await ensureCardImages(items);
 }
 
 /** Перегенерувати статті та statti.html з бази (для збірки — щоб OpenGraph потрапив і в уже створені) */
@@ -633,7 +640,10 @@ router.put('/:id', requireAuth, async (req, res) => {
   const existing = db.prepare('SELECT * FROM pages WHERE id = ?').get(id);
   if (!existing) return res.status(404).json({ error: 'Not found' });
   const b = req.body || {};
-  if (existing.slug === 'statti' && Array.isArray(b.items)) await ensureInstagramPosters(b.items);
+  if (existing.slug === 'statti' && Array.isArray(b.items)) {
+    await ensureInstagramPosters(b.items);
+    await ensureCardImages(b.items.map((item) => ({ ...item, og_photos: ogPhotos(item) })));
+  }
   const next = {
     title: b.title ?? existing.title,
     eyebrow: b.eyebrow ?? existing.eyebrow,

@@ -95,29 +95,39 @@ async function logoPlate() {
     .toBuffer();
 }
 
-/**
- * Збирає прев'ю 1200×630 (JPEG): фото смугами на всю висоту + лого по центру.
- * position — як sharp обрізає фото під смугу: 'attention' шукає найцікавіше, 'centre' — середина.
- */
-export async function composeOgImage(photos, position = 'attention') {
+/** Фото смугами на всю висоту (JPEG) */
+async function composeStrips(photos, { width, height, position, overlay }) {
   const count = photos.length;
-  const panel = Math.floor((OG_WIDTH - GAP * (count - 1)) / count);
+  const panel = Math.floor((width - GAP * (count - 1)) / count);
   const panels = await Promise.all(
     photos.map(async (buf, i) => ({
       input: await sharp(buf)
         .rotate()
         .flatten({ background: '#ffffff' })
-        .resize(panel, OG_HEIGHT, { fit: 'cover', position })
+        .resize(i === count - 1 ? width - i * (panel + GAP) : panel, height, { fit: 'cover', position })
         .toBuffer(),
       left: i * (panel + GAP),
       top: 0,
     }))
   );
-  const plate = await logoPlate();
-  return sharp({ create: { width: OG_WIDTH, height: OG_HEIGHT, channels: 3, background: GAP_COLOR } })
-    .composite([...panels, { input: plate, left: (OG_WIDTH - PLATE.width) / 2, top: (OG_HEIGHT - PLATE.height) / 2 }])
+  return sharp({ create: { width, height, channels: 3, background: GAP_COLOR } })
+    .composite([...panels, ...(overlay ? [overlay] : [])])
     .jpeg({ quality: 84, mozjpeg: true })
     .toBuffer();
+}
+
+/**
+ * Збирає прев'ю 1200×630 (JPEG): фото смугами на всю висоту + лого по центру.
+ * position — як sharp обрізає фото під смугу: 'attention' шукає найцікавіше, 'centre' — середина.
+ */
+export async function composeOgImage(photos, position = 'attention') {
+  const plate = await logoPlate();
+  return composeStrips(photos, {
+    width: OG_WIDTH,
+    height: OG_HEIGHT,
+    position,
+    overlay: { input: plate, left: (OG_WIDTH - PLATE.width) / 2, top: (OG_HEIGHT - PLATE.height) / 2 },
+  });
 }
 
 /** Вибрані фото → придатні картинки (биті й недоступні пропускаємо) */
@@ -151,9 +161,9 @@ function chosenPhotos() {
   return map;
 }
 
-function readSources() {
+function readSources(file = SOURCES_FILE) {
   try {
-    return JSON.parse(fs.readFileSync(SOURCES_FILE, 'utf8'));
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
   } catch {
     return {};
   }
@@ -192,4 +202,39 @@ export async function ensureOgImages(skip = []) {
   }
   fs.writeFileSync(SOURCES_FILE, `${JSON.stringify(sources, null, 2)}\n`);
   return { made, failed };
+}
+
+// Картинки карток у списку статей: ті самі вибрані фото смугами, але без лого.
+// Пропорція — як у .cat__media (16:10), удвічі більше за картку для чітких екранів.
+export const CARDS_DIR = path.join(ROOT, 'img', 'cards');
+const CARD = { width: 800, height: 500 };
+const CARD_SOURCES = path.join(CARDS_DIR, 'sources.json');
+const cardFile = (slug) => `img/cards/${slug}.jpg`;
+
+/** Картинка картки статті, якщо для неї вибрані фото й файл уже зібраний */
+export function cardImageFor(item) {
+  const chosen = Array.isArray(item?.og_photos) ? item.og_photos : [];
+  if (!item?.slug || !chosen.length) return '';
+  const file = cardFile(item.slug);
+  return fs.existsSync(path.join(ROOT, file)) ? file : '';
+}
+
+/** Збирає картинки карток для статей з вибраними фото: нові й ті, де фото змінили */
+export async function ensureCardImages(items = []) {
+  const sources = readSources(CARD_SOURCES);
+  let changed = false;
+  for (const item of items) {
+    const chosen = Array.isArray(item?.og_photos) ? item.og_photos.slice(0, OG_MAX_CHOSEN) : [];
+    if (item?.kind !== 'post' || !item.slug || !chosen.length) continue;
+    const out = path.join(ROOT, cardFile(item.slug));
+    const signature = chosen.join('\n');
+    if (fs.existsSync(out) && sources[item.slug] === signature) continue;
+    const photos = await loadChosenPhotos(chosen);
+    if (!photos.length) continue;
+    fs.mkdirSync(CARDS_DIR, { recursive: true });
+    fs.writeFileSync(out, await composeStrips(photos, { ...CARD, position: 'centre' }));
+    sources[item.slug] = signature;
+    changed = true;
+  }
+  if (changed) fs.writeFileSync(CARD_SOURCES, `${JSON.stringify(sources, null, 2)}\n`);
 }

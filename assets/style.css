@@ -1126,6 +1126,15 @@ h3:where(.h4) {
   border-radius: 12px;
   display: block;
 }
+.post-cover {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16/10;
+  object-fit: cover;
+  border-radius: 12px;
+  margin: 0 0 22px;
+}
 .post-gallery:has(> :only-child) .post-shot img {
   aspect-ratio: 16/10;
 }
