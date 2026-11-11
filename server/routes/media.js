@@ -4,6 +4,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { requireAuth } from '../auth.js';
 import { UPLOADS_DIR } from '../config.js';
+import { composeOgImage, loadChosenPhotos } from '../og-image.js';
 
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
@@ -52,6 +53,14 @@ router.get('/', requireAuth, (_req, res) => {
     }))
     .sort((a, b) => b.filename.localeCompare(a.filename));
   res.json(files);
+});
+
+/** Як виглядатиме прев'ю в соцмережах з вибраних фото (для адмінки) */
+router.post('/og-preview', requireAuth, async (req, res) => {
+  const refs = Array.isArray(req.body?.photos) ? req.body.photos.map((ref) => String(ref || '').trim()).filter(Boolean) : [];
+  const photos = await loadChosenPhotos(refs);
+  if (!photos.length) return res.status(400).json({ error: 'Жодне фото не вдалося відкрити' });
+  res.type('jpeg').send(await composeOgImage(photos, 'centre'));
 });
 
 export default router;

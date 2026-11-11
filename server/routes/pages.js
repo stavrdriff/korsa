@@ -6,13 +6,14 @@ import { requireAuth } from '../auth.js';
 import { PUBLIC_DIR, SITE_NAME, SITE_URL, UPLOADS_DIR } from '../config.js';
 import { writePage, writeSitemap } from '../sitemap.js';
 import { decode, esc, stripScripts } from '../html.js';
+import { OG_MAX_CHOSEN } from '../og-image.js';
 
 const router = Router();
 
 function loadItems(pageId) {
   return db
     .prepare(
-      `SELECT id, kind, group_label, title, description, href, image, price, sort_order, published, created_at, body, slug, photos, videos
+      `SELECT id, kind, group_label, title, description, href, image, price, sort_order, published, created_at, body, slug, photos, videos, og_photos
        FROM page_items WHERE page_id = ? ORDER BY sort_order, id`
     )
     .all(pageId)
@@ -20,6 +21,7 @@ function loadItems(pageId) {
       ...row,
       photos: postPhotos(row),
       videos: postVideos(row),
+      og_photos: ogPhotos(row),
     }));
 }
 
@@ -159,6 +161,11 @@ function orderedPhotos(item) {
   const cover = coverPhoto(item);
   if (!cover) return photos;
   return [cover, ...photos.filter((src) => src !== cover)];
+}
+
+/** Фото для прев'ю в соцмережах, вибрані в адмінці (до 3) */
+function ogPhotos(item) {
+  return (explicitList(item?.og_photos) || []).slice(0, OG_MAX_CHOSEN);
 }
 
 function postVideos(item) {
@@ -664,8 +671,8 @@ router.put('/:id', requireAuth, async (req, res) => {
       }
       db.prepare(`DELETE FROM page_items WHERE page_id = ?`).run(id);
       const ins = db.prepare(
-        `INSERT INTO page_items (page_id, kind, group_label, title, description, href, image, price, sort_order, published, created_at, body, slug, photos, videos)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO page_items (page_id, kind, group_label, title, description, href, image, price, sort_order, published, created_at, body, slug, photos, videos, og_photos)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       );
       b.items.forEach((item, i) => {
         const photos = item.kind === 'post' ? postPhotos(item) : [];
@@ -688,7 +695,8 @@ router.put('/:id', requireAuth, async (req, res) => {
           item.body || '',
           item.slug || '',
           item.kind === 'post' ? JSON.stringify(photos) : '',
-          item.kind === 'post' ? JSON.stringify(videos) : ''
+          item.kind === 'post' ? JSON.stringify(videos) : '',
+          item.kind === 'post' ? JSON.stringify(ogPhotos(item)) : ''
         );
       });
     }
