@@ -2312,3 +2312,103 @@ body > * {
   font-size: 13px;
   color: var(--muted);
 }
+
+/* Текст для пошуку на категорійних сторінках: як замовити, терміни, оплата, гарантія */
+.cat-text {
+  margin-top: 40px;
+  padding: 32px 36px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.cat-text__body {
+  max-width: 860px;
+}
+.cat-text h2 {
+  margin: 30px 0 12px;
+  font-size: 22px;
+}
+.cat-text h2:first-child {
+  margin-top: 0;
+}
+.cat-text p,
+.cat-text li {
+  margin: 0 0 12px;
+  font-size: 15.5px;
+  line-height: 1.7;
+  color: var(--text-2);
+}
+.cat-text ul,
+.cat-text ol {
+  margin: 0 0 12px;
+  padding-left: 22px;
+}
+.cat-text li {
+  margin-bottom: 6px;
+}
+.cat-text strong {
+  color: var(--text);
+}
+.cat-text a {
+  color: #2d5a8e;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .cat-text {
+    padding: 22px 18px;
+  }
+  .cat-text h2 {
+    font-size: 19px;
+  }
+}
+
+/* Питання й відповіді (FAQPage — розмітку збирає server/seo.js) */
+.faq {
+  margin-top: 40px;
+}
+.faq__list {
+  display: grid;
+  gap: 10px;
+  max-width: 900px;
+  margin-top: 6px;
+}
+.faq__item {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.faq__item summary {
+  position: relative;
+  padding: 16px 48px 16px 20px;
+  font-weight: 600;
+  font-size: 15.5px;
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+}
+.faq__item summary::-webkit-details-marker {
+  display: none;
+}
+.faq__item summary::after {
+  content: "+";
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--accent);
+}
+.faq__item[open] summary::after {
+  content: "−";
+}
+.faq__a {
+  padding: 0 20px 16px;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text-2);
+}
+.faq__a p {
+  margin: 0;
+}

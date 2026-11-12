@@ -53,6 +53,23 @@ function breadcrumbJson(name, html) {
   return `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
 }
 
+/** FAQPage з видимого блоку питань: <details class="faq__item"><summary>питання</summary><div class="faq__a">відповідь</div></details> */
+function faqJson(html) {
+  const text = (s) => decode(s.replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
+  const items = [...html.matchAll(/<details class="faq__item">\s*<summary>([\s\S]*?)<\/summary>\s*<div class="faq__a">([\s\S]*?)<\/div>\s*<\/details>/gi)];
+  if (!items.length) return '';
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: items.map((m) => ({
+      '@type': 'Question',
+      name: text(m[1]),
+      acceptedAnswer: { '@type': 'Answer', text: text(m[2]) },
+    })),
+  };
+  return `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
+}
+
 export function seoTags(name, source) {
   let html = source;
   const tags = [];
@@ -81,6 +98,7 @@ export function seoTags(name, source) {
     );
   }
   if (!/"BreadcrumbList"/.test(html)) tags.push(breadcrumbJson(name, html));
+  if (!/"FAQPage"/.test(html)) tags.push(faqJson(html));
   const block = tags.filter(Boolean).join('\n');
   return block ? html.replace('</head>', `${block}\n</head>`) : html;
 }
