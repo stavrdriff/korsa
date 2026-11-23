@@ -16,5 +16,7 @@ export const SITE_NAME = 'Корса Дніпро';
 export const PORT = Number(process.env.PORT) || 3000;
 export const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-secret';
 export const ADMIN_USER = process.env.ADMIN_USER || 'admin';
+/** Вікно входу в адмінку: вимкнене, поки сайт робиться лише локально. Повернути — ADMIN_LOGIN=on у .env */
+export const ADMIN_LOGIN = process.env.ADMIN_LOGIN === 'on';
 /** Префікс динамічного пароля: admin + дві цифри хвилини (напр. admin05) */
 export const ADMIN_PASSWORD_PREFIX = process.env.ADMIN_PASSWORD_PREFIX || 'admin';

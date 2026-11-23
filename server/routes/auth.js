@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { verifyLogin } from '../auth.js';
+import { currentUser, isLoginFree, verifyLogin } from '../auth.js';
 
 const router = Router();
 
@@ -22,8 +22,10 @@ router.post('/logout', (req, res) => {
 });
 
 router.get('/me', (req, res) => {
-  if (!req.session?.user) return res.status(401).json({ error: 'Unauthorized' });
-  res.json({ user: req.session.user });
+  const user = currentUser(req);
+  if (!user) return res.status(401).json({ error: 'Unauthorized' });
+  // Без вікна входу кнопка «Вийти» не потрібна
+  res.json({ user, canLogout: !isLoginFree(req) });
 });
 
 export default router;
