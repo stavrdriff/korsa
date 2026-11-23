@@ -1,7 +1,7 @@
 {
   "index.html": {
-    "hash": "23a982016b8d4b23213c4513809c373b3b2cba2d",
-    "date": "2026-11-12"
+    "hash": "c3c425deec5e69a1138c8a34e10d3f4d92290e24",
+    "date": "2026-11-23"
   },
   "alyuminievi-systemy.html": {
     "hash": "de7e9848ac3d55966ef9ef14180798831edb7ebe",
@@ -48,8 +48,8 @@
     "date": "2026-11-11"
   },
   "dveri.html": {
-    "hash": "235bba373ac6afc536a49216b920e5d98cf9acb4",
-    "date": "2026-11-12"
+    "hash": "646c4b99a80705cd99e368fb4c415537c020c8e3",
+    "date": "2026-11-23"
   },
   "ekonomiya-na-viknakh.html": {
     "hash": "b4b8b7203c192ac402ab1a8fcad799e48efa631f",
@@ -104,8 +104,12 @@
     "date": "2026-11-10"
   },
   "mizhkimnatni-dveri.html": {
-    "hash": "335a24a6d402cb7619a2e38a264f77365b524ce4",
-    "date": "2026-11-12"
+    "hash": "6d0a487ee94c7933c3fc79a67567e126bc9e1f53",
+    "date": "2026-11-23"
+  },
+  "molotkove-pokryttya.html": {
+    "hash": "6a5e678649e261503d2bdbc2c892f4247776c7d8",
+    "date": "2026-11-23"
   },
   "perevirka-armuvannya-vikna.html": {
     "hash": "df4e7845bfcf3f1476cad7d139060176e3d27abc",
@@ -264,8 +268,8 @@
     "date": "2026-11-10"
   },
   "rolety.html": {
-    "hash": "dabeaa02ea4fb7f68463c6c94942a461135a1c1e",
-    "date": "2026-11-12"
+    "hash": "ea54c54c7f6686407921c43c582493bff33d8d66",
+    "date": "2026-11-23"
   },
   "rymski-shtory-chy-rolety.html": {
     "hash": "7370f5e7792a5e6d31c4a31a91ef832385e7f524",
@@ -300,20 +304,20 @@
     "date": "2026-11-10"
   },
   "shtory.html": {
-    "hash": "5778839e53ed9a30ec96d195f4b3ffc9594be1ee",
-    "date": "2026-11-12"
+    "hash": "2908fef8da9110c6fbd0fbc68992500bea43600e",
+    "date": "2026-11-23"
   },
   "sklyani-vyroby.html": {
     "hash": "d062af798f277bd546d835407dcfab6fcfb785ba",
     "date": "2026-11-10"
   },
   "statti-2.html": {
-    "hash": "a5bcb8cf9642c6f80f58b39a69975e9071c7e3b0",
-    "date": "2026-11-11"
+    "hash": "7cd995cc37d7e7204c867dd7839fc9f17d0bd104",
+    "date": "2026-11-23"
   },
   "statti.html": {
-    "hash": "b7480f8b6665fcd1b8be5148ab49d435d43b399a",
-    "date": "2026-11-11"
+    "hash": "396c8e7fee8aa3d8a4c195b14eea2b55caa231e9",
+    "date": "2026-11-23"
   },
   "tkanini-zovnishni.html": {
     "hash": "2ecb1796c2fabb9adb0b6366b092871b2fbf9463",
@@ -324,28 +328,32 @@
     "date": "2026-11-11"
   },
   "vhidni-dveri.html": {
-    "hash": "a0650f9197ba9b9772b079b9e7c9fa3b97e845f6",
-    "date": "2026-11-12"
+    "hash": "3101fb05fb43e9993e3063e0a6e97b150c15265d",
+    "date": "2026-11-23"
   },
   "vidhuky.html": {
     "hash": "a7712e8b096936840e07384a5ccff2ff13f25fc3",
     "date": "2026-11-07"
   },
   "vikna-rehau.html": {
-    "hash": "727ed6eb23edcb7d034e8e0d164cb515e2edd304",
-    "date": "2026-11-12"
+    "hash": "f6a0710523fd4ee78ba2519b02a3d5609640943a",
+    "date": "2026-11-23"
   },
   "vikna-wds.html": {
-    "hash": "5d54606db90c5f9823a2b52015b8505f4ce65699",
-    "date": "2026-11-11"
+    "hash": "70e2d05d5e83ac0b9b5238ddba6d7b295bc9d83f",
+    "date": "2026-11-23"
   },
   "vikna.html": {
-    "hash": "83b822f9541b113c48acb9e06280df2dca2d6788",
-    "date": "2026-11-12"
+    "hash": "0d8313d657c4fa67caaa93497034a3c139cf2774",
+    "date": "2026-11-23"
   },
   "vydy-tkanynnykh-rolet.html": {
     "hash": "fc99cc6756e2681b59ba84cbec2d32f8ce9ad2dc",
     "date": "2026-11-11"
+  },
+  "yak-obraty-vhidni-dveri.html": {
+    "hash": "1c766bdc1d9acdf86f5ba177b788bc209241da58",
+    "date": "2026-11-23"
   },
   "zip-system.html": {
     "hash": "3157f71d9057830039c1a960341e9decb05ce1f1",
