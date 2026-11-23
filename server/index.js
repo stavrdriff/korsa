@@ -3,6 +3,7 @@ import path from 'node:path';
 import express from 'express';
 import session from 'express-session';
 import {
+  ADMIN_LOGIN,
   PORT,
   SESSION_SECRET,
   PUBLIC_DIR,
@@ -67,7 +68,7 @@ app.use(express.static(PUBLIC_DIR, { index: 'index.html' }));
 writeSitemap();
 
 app.listen(PORT, () => {
-  console.log(`КОРСА CMS → http://localhost:${PORT}`);
+  console.log(`Корса Дніпро CMS → http://localhost:${PORT}`);
   console.log(`Адмінка   → http://localhost:${PORT}/admin/`);
-  console.log(`Логін: див. .env (ADMIN_USER / ADMIN_PASSWORD)`);
+  console.log(ADMIN_LOGIN ? 'Логін: див. .env (ADMIN_USER / ADMIN_PASSWORD_PREFIX)' : 'Вхід без пароля з цього комп\'ютера');
 });

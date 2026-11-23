@@ -1,5 +1,5 @@
 // Картинки для прев'ю в соцмережах у стилі головної (img/og-home.jpg):
-// 1200×630, до трьох фото сторінки поруч і лого Корси на білій плашці по центру.
+// 1200×630, до трьох фото сторінки поруч і лого «Корса Дніпро» на білій плашці по центру.
 // Квадратне прев'ю Viber/WhatsApp бере центр — там якраз лого.
 //
 // Готові файли лежать в img/og/<сторінка>.jpg. Збірка створює лише відсутні;
@@ -79,9 +79,10 @@ async function pickPhotos(html) {
 }
 
 async function logoPlate() {
-  const logo = await sharp(path.join(ROOT, 'img', 'logo.jpg'))
+  const logo = await sharp(path.join(ROOT, 'img', 'logo-korsa-dnipro.png'))
     .resize({ width: LOGO_WIDTH })
-    .normalise({ lower: 0, upper: 85 })
+    .flatten({ background: '#ffffff' })
+    .png()
     .toBuffer();
   const { height: logoHeight } = await sharp(logo).metadata();
   const { width, height, radius } = PLATE;

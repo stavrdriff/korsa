@@ -49,7 +49,7 @@ const tx = db.transaction(() => {
     video_poster: 'https://img.youtube.com/vi/GrqcmvFlMdk/hqdefault.jpg',
     parent_link: 'shtory-plise.html',
     parent_label: 'Штори Плісе',
-    meta_title: 'Plisse JM AB-62 — штори плісе | Корса',
+    meta_title: 'Корса Дніпро | Plisse JM AB-62 — штори плісе',
     meta_description:
       'Plisse JM AB-62 — нестандартної форми, монтаж на стулку, керування ручка. Кольори: білий, коричневий, металік, чорний. Партнер SUNNY TM.',
   }).lastInsertRowid;

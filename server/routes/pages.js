@@ -396,7 +396,7 @@ function renderArticlePage(shell, item) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(item.title || 'Стаття')} | Корса</title>
+<title>${SITE_NAME} | ${esc(item.title || 'Стаття')}</title>
 <meta name="description" content="${esc(lead)}">
 <link rel="canonical" href="${esc(absoluteUrl(articleFile(item.slug)))}">
 ${openGraphTags(item, lead)}
@@ -451,7 +451,7 @@ function writeStattiPages(shell, items) {
     const name = stattiFile(n);
     keep.add(name);
     const html = renderStattiPosts(shell, items, n)
-      .replace(/<title>([\s\S]*?)(\s*\|\s*Корса)?<\/title>/i, (_, title, brand = '') => `<title>${title} — сторінка ${n}${brand}</title>`)
+      .replace(/<title>([\s\S]*?)<\/title>/i, (_, title) => `<title>${title} — сторінка ${n}</title>`)
       .replace(/(<meta name="description" content=")([^"]*)(")/i, (_, open, desc, close) => `${open}${desc} Сторінка ${n}.${close}`);
     writePage(path.join(PUBLIC_DIR, name), withStattiOpenGraph(html, items, n));
   }
@@ -620,7 +620,7 @@ router.get('/links', (_req, res) => {
     .map((name) => {
       const html = fs.readFileSync(path.join(PUBLIC_DIR, name), 'utf8');
       const raw = html.match(/<title>([\s\S]*?)<\/title>/i)?.[1] || '';
-      const title = decode(raw).replace(/\s*\|\s*Корса\s*$/i, '').trim() || name;
+      const title = decode(raw).replace(/^Корса Дніпро\s*\|\s*/i, '').trim() || name;
       const known = meta.get(name);
       const parent = known?.parent || (isArticleHtml(html) ? 'statti.html' : name === 'index.html' ? '' : 'index.html');
       return { href: name, title, parent, order: known?.order ?? 0 };

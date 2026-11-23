@@ -48,7 +48,8 @@ function showView(name, title) {
 async function requireAuth() {
   try {
     const me = await api('/auth/me');
-    document.getElementById('userLabel').textContent = me.user;
+    document.getElementById('userLabel').textContent = me.canLogout ? me.user : '';
+    document.getElementById('logoutBtn').classList.toggle('hidden', !me.canLogout);
   } catch {
     location.href = '/admin/login.html';
   }
@@ -1795,7 +1796,7 @@ function addPostCard(item = {}, prepend = false, open = false) {
         <label>Фото для прев'ю в соцмережах</label>
         <button type="button" class="btn btn-ghost" data-add-og>+ Фото</button>
       </div>
-      <p class="post-og__hint">До 3 фото — у Viber, Telegram чи Facebook вони стануть смугами з лого Корси посередині. Порожньо — візьметься фото зі статті.</p>
+      <p class="post-og__hint">До 3 фото — у Viber, Telegram чи Facebook вони стануть смугами з лого Корса Дніпро посередині. Порожньо — візьметься фото зі статті.</p>
       <div data-og></div>
       <div class="post-og">
         <button type="button" class="btn btn-ghost" data-og-preview>Показати прев'ю</button>

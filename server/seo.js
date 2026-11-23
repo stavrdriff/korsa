@@ -32,7 +32,7 @@ const ogSizeTags = () => [
 function previewImage(html) {
   const main = html.slice(Math.max(0, html.search(/<main\b/i)));
   const src = [...main.matchAll(/<img\b[^>]*\ssrc="([^"]+\.(?:jpe?g|png))"/gi)].map((m) => m[1])[0];
-  return absolute(src || 'img/logo.jpg');
+  return absolute(src || 'img/logo-korsa-dnipro.png');
 }
 
 function breadcrumbJson(name, html) {

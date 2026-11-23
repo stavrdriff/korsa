@@ -1,6 +1,6 @@
 import path from 'node:path';
 import db from '../db.js';
-import { PUBLIC_DIR } from '../config.js';
+import { PUBLIC_DIR, SITE_NAME } from '../config.js';
 import { writePage, writeSitemap } from '../sitemap.js';
 import { esc, stripScripts } from '../html.js';
 import { headerHtml, footerHtml, PRODUCT_PAGE_CSS } from './partials.js';
@@ -34,7 +34,7 @@ function getProductBundle(idOrSlug) {
 
 function renderProductHtml(bundle) {
   const { product, specs, media } = bundle;
-  const title = product.meta_title || `${product.title} | Корса`;
+  const title = product.meta_title || `${SITE_NAME} | ${product.title}`;
   const desc = product.meta_description || product.description || '';
   const parentLink = product.parent_link || 'catalog.html';
   const parentLabel = product.parent_label || 'Каталог';
